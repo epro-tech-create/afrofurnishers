@@ -37,7 +37,7 @@ export function HomePage() {
               <p>{t.dropLead}</p>
               <div className="featured-meta">
                 <span>Living room</span>
-                <span>Order on WhatsApp</span>
+                <span>Order now</span>
               </div>
               <a className="button" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.enquire} <ArrowUpRight size={16} /></a>
             </div>

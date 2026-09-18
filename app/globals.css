@@ -570,11 +570,12 @@ nav a:hover:after, nav a[aria-current=page]:after { transform: scaleX(1); }
   max-width: 150px;
   height: 52px;
   object-fit: contain;
-  filter: none;
-  opacity: 0.95;
-  transition: opacity 0.3s, transform 0.3s;
+  filter: grayscale(1) contrast(1.05);
+  opacity: 0.85;
+  transition: filter 0.3s, opacity 0.3s, transform 0.3s;
 }
 .client-logo:hover img {
+  filter: none;
   opacity: 1;
   transform: scale(1.04);
 }

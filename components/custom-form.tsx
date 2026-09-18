@@ -104,7 +104,7 @@ export function CustomForm() {
           <button className="button" onClick={() => downloadText('AfroFurnitures-project-notes.txt', 'AfroFurnitures project notes\nNot an order.\n\n' + summary.join('\n'))}>
             Download notes ↓
           </button>
-          <p><a className="text-link" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order on WhatsApp →</a></p>
+          <p><a className="text-link" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order now →</a></p>
         </motion.div>
       )}
     </section>

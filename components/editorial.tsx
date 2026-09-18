@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { pages } from '@/lib/pages';
-import { WHATSAPP_DISPLAY, orderWhatsApp } from '@/lib/whatsapp';
+import { orderWhatsApp } from '@/lib/whatsapp';
 import { Reveal } from './motion';
 
 export function InformationPage({ name }: { name: string }) {
@@ -13,7 +13,7 @@ export function InformationPage({ name }: { name: string }) {
       {content.slice(2).map(text => <p key={text}>{text}</p>)}
       <div className="buttons">
         <a href={orderWhatsApp()} className="button" target="_blank" rel="noopener noreferrer">
-          {name === 'contact' ? `WhatsApp ${WHATSAPP_DISPLAY} →` : 'Order on WhatsApp →'}
+          Order now →
         </a>
         <Link href="/shop" className="text-link">See our work →</Link>
       </div>
@@ -57,7 +57,7 @@ export function Article({ id }: { id: string }) {
           ? 'Measure the room, leave walking space, and pick a size that fits everyday meals in a Tanzanian home.'
           : 'Start with comfortable seating, warm colours and clear pathways. One good sofa can set the tone for the whole room.'}
       </p>
-      <a className="button" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order on WhatsApp →</a>
+      <a className="button" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order now →</a>
     </section>
   );
 }
