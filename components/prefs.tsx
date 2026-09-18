@@ -17,11 +17,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem('afro-theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') setThemeState(savedTheme);
-      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setThemeState('dark');
-    } catch { /* Defaults remain. */ }
+    setThemeState('light');
     setReady(true);
   }, []);
 

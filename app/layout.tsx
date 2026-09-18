@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.svg' },
 };
 
-const themeBoot = `(function(){try{var t=localStorage.getItem('afro-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t);document.documentElement.lang='en'}catch(e){}})();`;
+const themeBoot = `(function(){try{localStorage.setItem('afro-theme','light');document.documentElement.setAttribute('data-theme','light');document.documentElement.lang='en'}catch(e){document.documentElement.setAttribute('data-theme','light');document.documentElement.lang='en'}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

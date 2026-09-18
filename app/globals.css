@@ -579,9 +579,22 @@ nav a:hover:after, nav a[aria-current=page]:after { transform: scaleX(1); }
   opacity: 1;
   transform: scale(1.04);
 }
+.client-logo:has(img[src*="stanbic"]) {
+  background: #fff;
+  border-color: #0033a0;
+}
 .client-logo img[src*="stanbic"] {
   height: 56px;
   max-width: 64px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 4px;
+  filter: none;
+  opacity: 1;
+}
+.client-logo:hover img[src*="stanbic"] {
+  filter: none;
+  opacity: 1;
 }
 .client-logo img[src*="lulu"] {
   height: 64px;
