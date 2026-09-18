@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const p = products.find(p => p.id === slug[1]);
   const title = slug[0] === 'product' && p ? p.name : slug[0] === 'article' ? (slug[1] === 'table' ? 'Make space for a longer conversation' : 'A warmer way to come home') : slug[0].charAt(0).toUpperCase() + slug[0].slice(1);
-  return { title, description: `${title} — explore thoughtful furniture and warm interiors with AfroFurnitures in Dar es Salaam.` };
+  return { title, description: `${title} — AfroFurnitures quality furniture for sale in Dar es Salaam, Tanzania.` };
 }
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug: [page, arg] } = await params;

@@ -1,1 +1,34 @@
-export const pages: Record<string, string[]> = {story:['OUR ROOTS. YOUR HOME.','Warmth is where we begin.','AfroFurnitures is a contemporary furniture concept based in Dar es Salaam, Tanzania. Our direction is simple: furniture shaped by African warmth and modern life.','We look to natural textures, inviting proportions and thoughtful details. This showroom introduces our design direction; the photographs are inspiration images, and the collection is a sample catalogue.','Our next chapter is the real workshop story. Maker profiles, production details and verified sourcing will be added as the business takes shape.'],contact:['LET’S MAKE ROOM','A conversation worth having.','Dar es Salaam, Tanzania.','Showroom address, opening hours, business email and WhatsApp number have not yet been provided. Visits and WhatsApp enquiries will become available when these details are confirmed.','For now, explore the collection or prepare a custom furniture brief to keep for later.'],care:['LIVING WITH YOUR FURNITURE','A little care goes a long way.','Dust with a soft, dry cloth. Blot spills without rubbing, and avoid prolonged direct sunlight.','Use coasters on wood surfaces. Avoid harsh chemicals, abrasive cloths and excessive moisture. Always follow the final manufacturer’s instructions for your specific material.'],delivery:['THE PRACTICAL DETAILS','Delivery, thoughtfully planned.','Delivery fees, service areas, lead times, assembly services and returns policies have not been finalised.','The sample catalogue does not promise inventory or delivery dates. All order terms and the final total must be confirmed before purchase. No paid orders are accepted on this preview.'],privacy:['YOUR INFORMATION','Privacy & terms.','This is a demonstration showroom. Products, prices and specifications are sample data, and photographs illustrate the design direction.','Your bag and favourites are stored only in this browser. Your design brief is saved in session storage in this browser tab and is not submitted to a server. Clearing browser storage removes your saved selection.','The site loads a font from Google Fonts. Business privacy, sales and returns terms must be finalised before accepting customer orders.']};
+export const pages: Record<string, string[]> = {
+  story: [
+    'ABOUT US',
+    'Furniture for Dar es Salaam.',
+    'AfroFurnitures is a furniture store based in Dar es Salaam, Tanzania. We sell quality pieces for homes and workplaces — sofas, dining sets, beds, desks and more.',
+    'Our mission is to help customers buy furniture they are proud to live and work with. Our vision is to be Tanzania’s trusted furniture seller — known for honest service and good products.',
+    'This website helps you browse what we sell. Contact us when you are ready to buy.',
+  ],
+  contact: [
+    'WHATSAPP ORDERS',
+    'Order directly on WhatsApp.',
+    'We are based in Dar es Salaam, Tanzania.',
+    'All orders and enquiries go to WhatsApp: +255 692 009 222. Tell us the furniture you want, quantity, budget and delivery area.',
+    'Open WhatsApp from the buttons on this site, or message that number to place your order.',
+  ],
+  care: [
+    'FURNITURE CARE',
+    'Keep your furniture looking its best.',
+    'Dust with a soft cloth, wipe spills quickly, and avoid long hours in strong sun.',
+    'Use coasters on wood and follow material-specific care advice.',
+  ],
+  delivery: [
+    'DELIVERY',
+    'Delivery across Tanzania.',
+    'Delivery areas, timing and fees are agreed when you buy.',
+    'This website does not calculate delivery or take payment online.',
+  ],
+  privacy: [
+    'PRIVACY',
+    'Your information.',
+    'This is a demonstration site. Theme preferences stay in your browser.',
+    'Full privacy terms will be published before collecting customer details online.',
+  ],
+};
