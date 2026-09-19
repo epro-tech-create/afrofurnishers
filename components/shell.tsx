@@ -103,7 +103,12 @@ function Footer() {
       <div className="footer-brand">AfroFurnitures</div>
       <div className="footer-bottom">
         <span>{t.footerCopy}</span>
-        <span>Managed by eproTech and Gsky sports</span>
+        <span>
+          Developed by{' '}
+          <a href="https://github.com/epro-tech-create" target="_blank" rel="noopener noreferrer">
+            eproTech
+          </a>
+        </span>
       </div>
     </footer>
   );
