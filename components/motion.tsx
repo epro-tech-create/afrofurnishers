@@ -121,11 +121,12 @@ export function Hero() {
       <motion.div className="hero-minimal-copy" style={{ y: reduced ? 0 : copyY, opacity: reduced ? 1 : fade }}>
         <motion.p
           className="hero-brand"
+          aria-label="AfroFurnitures"
           initial={reduced ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
         >
-          Afro<span>Furnitures</span>
+          <span aria-hidden="true">Afro<span>Furnitures</span></span>
         </motion.p>
         <motion.h1
           initial={reduced ? false : { opacity: 0, y: 28 }}

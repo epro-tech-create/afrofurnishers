@@ -15,9 +15,9 @@ function Header() {
 
   return (
     <header>
-      <Link className="brand" href="/" onClick={() => setOpen(false)}>
+      <Link className="brand" href="/" aria-label="AfroFurnitures" onClick={() => setOpen(false)}>
         <span className="brand-mark" aria-hidden />
-        Afro<span>{t.brandSub}</span>
+        <span aria-hidden="true">Afro<span className="brand-accent">Furnitures</span></span>
       </Link>
       <nav id="primary-nav" className={open ? 'open' : ''} aria-label="Main navigation">
         {t.nav.map(([href, name]) => {

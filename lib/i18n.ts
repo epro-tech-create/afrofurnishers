@@ -11,6 +11,7 @@ export const t = {
     ['https://wa.me/255692009222', 'WhatsApp'],
   ] as [string, string][],
   brandSub: 'Furnitures',
+  brand: 'AfroFurnitures',
   themeLight: 'Light mode',
   themeDark: 'Dark mode',
   skip: 'Skip to content',
