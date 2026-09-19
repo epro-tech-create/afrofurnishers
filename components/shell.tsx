@@ -103,7 +103,7 @@ function Footer() {
       <div className="footer-brand">AfroFurnitures</div>
       <div className="footer-bottom">
         <span>{t.footerCopy}</span>
-        <span>Dar es Salaam, Tanzania</span>
+        <span>Managed by eproTech and Gsky sports</span>
       </div>
     </footer>
   );
