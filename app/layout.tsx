@@ -3,8 +3,8 @@ import { Shell } from '@/components/shell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'AfroFurnitures — Quality Furniture for Sale in Dar es Salaam', template: '%s | AfroFurnitures' },
-  description: 'AfroFurnitures sells quality sofas, dining sets, beds and more in Dar es Salaam, Tanzania. Browse the collection and contact us to buy.',
+  title: { default: 'AfroFurnishers — Quality Furniture for Sale in Dar es Salaam', template: '%s | AfroFurnishers' },
+  description: 'AfroFurnishers sells quality sofas, dining sets, beds and more in Dar es Salaam, Tanzania. Browse the collection and contact us to buy.',
   icons: { icon: '/favicon.svg' },
 };
 

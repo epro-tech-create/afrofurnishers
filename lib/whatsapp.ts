@@ -9,7 +9,7 @@ export function whatsappLink(message?: string) {
 
 export function orderWhatsApp(productName?: string) {
   if (productName) {
-    return whatsappLink(`Habari AfroFurnitures, I want to order: ${productName}`);
+    return whatsappLink(`Habari AfroFurnishers, I want to order: ${productName}`);
   }
-  return whatsappLink('Habari AfroFurnitures, I want to place an order / enquire about furniture.');
+  return whatsappLink('Habari AfroFurnishers, I want to place an order / enquire about furniture.');
 }

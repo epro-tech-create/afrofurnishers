@@ -9,7 +9,7 @@ export function InformationPage({ name }: { name: string }) {
     <section className="page article">
       <p className="eyebrow">{content[0]}</p>
       <h1>{content[1]}</h1>
-      {name === 'story' && <img src="/assets/dining.jpg" alt="AfroFurnitures furniture for Tanzanian homes" width={1000} height={700} />}
+      {name === 'story' && <img src="/assets/dining.jpg" alt="AfroFurnishers furniture for Tanzanian homes" width={1000} height={700} />}
       {content.slice(2).map(text => <p key={text}>{text}</p>)}
       <div className="buttons">
         <a href={orderWhatsApp()} className="button" target="_blank" rel="noopener noreferrer">

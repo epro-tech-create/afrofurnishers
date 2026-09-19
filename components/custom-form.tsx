@@ -65,7 +65,7 @@ export function CustomForm() {
       <p className="eyebrow">BUYING NOTES</p>
       <h1>Tell us what you want to buy.</h1>
       <p>Use this form to list the furniture you need before you contact us. Nothing is purchased online.</p>
-      <p className="note">Download your notes and share them when you speak with AfroFurnitures.</p>
+      <p className="note">Download your notes and share them when you speak with AfroFurnishers.</p>
       <form onSubmit={submit}>
         <div className="form-grid">
           <label>Furniture type
@@ -101,7 +101,7 @@ export function CustomForm() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="brief-summary" ref={summaryRef} tabIndex={-1}>
           <h2>Your notes</h2>
           <div className="note">{summary.map(line => <p key={line}>{line}</p>)}</div>
-          <button className="button" onClick={() => downloadText('AfroFurnitures-project-notes.txt', 'AfroFurnitures project notes\nNot an order.\n\n' + summary.join('\n'))}>
+          <button className="button" onClick={() => downloadText('AfroFurnishers-project-notes.txt', 'AfroFurnishers project notes\nNot an order.\n\n' + summary.join('\n'))}>
             Download notes ↓
           </button>
           <p><a className="text-link" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order now →</a></p>
