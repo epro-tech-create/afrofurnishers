@@ -10,13 +10,21 @@ import { ScrollProgress } from './motion';
 
 function Header() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { t, theme, toggleTheme } = usePrefs();
+  const isHome = pathname === '/' || pathname === '';
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 32);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [pathname]);
 
   return (
-    <header>
+    <header className={scrolled || !isHome ? 'is-solid' : 'is-overlay'}>
       <Link className="brand" href="/" aria-label="AfroFurnishers" onClick={() => setOpen(false)}>
-        <span className="brand-mark" aria-hidden />
         <span aria-hidden="true">Afro<span className="brand-accent">Furnishers</span></span>
       </Link>
       <nav id="primary-nav" className={open ? 'open' : ''} aria-label="Main navigation">

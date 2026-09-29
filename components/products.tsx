@@ -28,7 +28,7 @@ export function ProductDetail({ product: p, compact = false }: { product: Produc
         {compact ? <h2 id="product-dialog-title">{p.name}</h2> : <h1>{p.name}</h1>}
         <p className="muted">{p.category} · {p.material}</p>
         <p className="showcase-price">{money(p.price)} <span className="muted">· indicative</span></p>
-        <p>Furniture from our collection — warm materials and practical shapes for Tanzanian living.</p>
+        <p>Furniture from our collection. Warm materials and practical shapes for Tanzanian living.</p>
         <p className="note">Browse here, then order on WhatsApp. We do not take online payments on this website.</p>
         <a className="button" href={orderWhatsApp(p.name)} target="_blank" rel="noopener noreferrer">{t.enquire} →</a>
         {compact ? <Link href={`/product/${p.id}`} className="text-link">{t.details} →</Link> : null}
@@ -172,7 +172,7 @@ export function Shop({ initialCategory = 'All' }: { initialCategory?: string }) 
       <p className="eyebrow">{t.workEyebrow}</p>
       <h1>{t.workTitle}</h1>
       <p>{t.workLead}</p>
-      <p className="note">Browse only — contact us to buy. No online checkout.</p>
+      <p className="note">Browse only. Contact us to buy. No online checkout.</p>
       <div className="filterbar">
         <input
           id="search"
@@ -215,7 +215,7 @@ export function ShopRoom() {
         </button>
         <div className="room-caption">
           <p className="eyebrow">TAP +</p>
-          <p>Masaki sofa — available to enquire</p>
+          <p>Masaki sofa, available to enquire</p>
         </div>
       </div>
       <QuickView product={quick} onClose={() => setQuick(null)} />

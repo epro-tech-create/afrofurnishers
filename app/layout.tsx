@@ -3,7 +3,7 @@ import { Shell } from '@/components/shell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'AfroFurnishers — Quality Furniture for Sale in Dar es Salaam', template: '%s | AfroFurnishers' },
+  title: { default: 'AfroFurnishers | Quality Furniture for Sale in Dar es Salaam', template: '%s | AfroFurnishers' },
   description: 'AfroFurnishers sells quality sofas, dining sets, beds and more in Dar es Salaam, Tanzania. Browse the collection and contact us to buy.',
   icons: { icon: '/favicon.svg' },
 };
@@ -15,6 +15,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://db.onlinewebfonts.com" crossOrigin="anonymous" />
+        {/* Kaleko 105 Bold for titles loads via @font-face in globals.css (font-display: swap, non-blocking).
+            No render-blocking stylesheet link here on purpose so first paint never waits on the font CDN. */}
       </head>
       <body>
         <Shell>{children}</Shell>

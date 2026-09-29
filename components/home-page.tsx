@@ -29,7 +29,7 @@ export function HomePage() {
         <Reveal>
           <div className="featured-layout">
             <FadeUp className="featured-media">
-              <img src="/assets/sofa.jpg" alt="Signature living room sofa" width={1100} height={900} loading="lazy" />
+              <img src="/assets/hero.jpg" alt="Warm living room sofa in terracotta" width={1100} height={900} loading="lazy" />
             </FadeUp>
             <div className="featured-copy">
               <p className="eyebrow">{t.workEyebrow}</p>
@@ -51,6 +51,7 @@ export function HomePage() {
             <div>
               <p className="eyebrow">{t.roomsEyebrow}</p>
               <h2>{t.roomsTitle}</h2>
+              <p>Shop by space, from cosy living rooms to full institutional fit-outs.</p>
             </div>
           </div>
           <div className="rooms-minimal">
@@ -127,15 +128,18 @@ export function HomePage() {
                 <p>{t.mission}</p>
               </div>
             </motion.article>
-            <motion.article className="mv-card mv-vision" whileHover={{ y: -6 }} transition={{ duration: 0.25 }}>
-              <span className="mv-icon"><Eye size={22} /></span>
-              <p className="eyebrow">{t.visionLabel}</p>
-              <p>{t.vision}</p>
-              <ul className="mv-points">
-                <li><Handshake size={16} /> Honest service</li>
-                <li><Award size={16} /> Quality products</li>
-                <li><Home size={16} /> Local in Dar es Salaam</li>
-              </ul>
+            <motion.article className="mv-card mv-photo" whileHover={{ y: -6 }} transition={{ duration: 0.25 }}>
+              <img src="/assets/sofa.jpg" alt="Bright modern seating" width={800} height={600} loading="lazy" />
+              <div className="mv-photo-copy">
+                <span className="mv-icon"><Eye size={22} /></span>
+                <p className="eyebrow">{t.visionLabel}</p>
+                <p>{t.vision}</p>
+                <ul className="mv-points">
+                  <li><Handshake size={16} /> Honest service</li>
+                  <li><Award size={16} /> Quality products</li>
+                  <li><Home size={16} /> Local in Dar es Salaam</li>
+                </ul>
+              </div>
             </motion.article>
           </div>
           <p className="eyebrow values-label">{t.valuesLabel}</p>

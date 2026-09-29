@@ -9,7 +9,7 @@ export function CartPage() {
     <section className="page article">
       <p className="eyebrow">SHOP</p>
       <h1>Order now.</h1>
-      <p className="note">Browse our furniture, then message us to buy. All orders go directly to WhatsApp — we do not take payments on this website.</p>
+      <p className="note">Browse our furniture, then message us to buy. All orders go directly to WhatsApp. We do not take payments on this website.</p>
       <div className="buttons">
         <a className="button" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.ctaButton} →</a>
         <Link className="text-link" href="/shop">{t.workCta} →</Link>

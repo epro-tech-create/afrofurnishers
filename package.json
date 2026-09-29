@@ -1,5 +1,5 @@
 {
-  "name": "afrofurnishers",
+  "name": "afrofurnitures",
   "version": "2.0.0",
   "private": true,
   "scripts": {
@@ -11,3 +11,10 @@
   "dependencies": { "next": "latest", "react": "latest", "react-dom": "latest", "motion": "latest", "lucide-react": "latest" },
   "devDependencies": { "typescript": "latest", "@types/node": "latest", "@types/react": "latest", "@types/react-dom": "latest" }
 }
+
+
+
+
+
+
+

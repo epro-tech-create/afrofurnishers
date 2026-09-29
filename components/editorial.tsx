@@ -67,9 +67,9 @@ export function Credits() {
     <section className="page article">
       <h1>Photo credits.</h1>
       <p>Stock photos show the style of furniture we sell and may not show exact current stock.</p>
-      <p><a className="text-link" href="https://unsplash.com/photos/G8rS7Sz9FiQ" target="_blank" rel="noopener noreferrer">Living room — Jason Leung / Unsplash →</a></p>
-      <p><a className="text-link" href="https://unsplash.com/photos/t2mzF13kSpA" target="_blank" rel="noopener noreferrer">Coral seat — Dário Gomes / Unsplash →</a></p>
-      <p><a className="text-link" href="https://www.pexels.com/photo/8113036/" target="_blank" rel="noopener noreferrer">Dining room — Rachel Claire / Pexels →</a></p>
+      <p><a className="text-link" href="https://unsplash.com/photos/G8rS7Sz9FiQ" target="_blank" rel="noopener noreferrer">Living room by Jason Leung / Unsplash →</a></p>
+      <p><a className="text-link" href="https://unsplash.com/photos/t2mzF13kSpA" target="_blank" rel="noopener noreferrer">Coral seat by Dário Gomes / Unsplash →</a></p>
+      <p><a className="text-link" href="https://www.pexels.com/photo/8113036/" target="_blank" rel="noopener noreferrer">Dining room by Rachel Claire / Pexels →</a></p>
     </section>
   );
 }

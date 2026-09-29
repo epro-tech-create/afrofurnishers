@@ -2,8 +2,8 @@ export const pages: Record<string, string[]> = {
   story: [
     'ABOUT US',
     'Furniture for Dar es Salaam.',
-    'AfroFurnishers is a furniture store based in Dar es Salaam, Tanzania. We sell quality pieces for homes and workplaces — sofas, dining sets, beds, desks and more.',
-    'Our mission is to help customers buy furniture they are proud to live and work with. Our vision is to be Tanzania’s trusted furniture seller — known for honest service and good products.',
+    'AfroFurnishers is a furniture store based in Dar es Salaam, Tanzania. We sell quality pieces for homes and workplaces: sofas, dining sets, beds, desks and more.',
+    'Our mission is to help customers buy furniture they are proud to live and work with. Our vision is to be Tanzania’s trusted furniture seller, known for honest service and good products.',
     'This website helps you browse what we sell. Contact us when you are ready to buy.',
   ],
   contact: [
