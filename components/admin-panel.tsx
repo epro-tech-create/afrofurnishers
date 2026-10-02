@@ -7,6 +7,7 @@ import {
   TrendingUp, Users, Wallet, X,
 } from 'lucide-react';
 import { adminApi } from '@/lib/admin-client';
+import { Loader } from '@/components/loader';
 import { money } from '@/lib/catalog';
 import { downloadShopReport } from '@/lib/pdf-report';
 import { DELIVERY_FEES, deliveryFeeFor, type AdminProfile, type CustomerListItem, type DashboardStats, type Order, type OrderStatus, type PaymentStatus, type ProductFull } from '@/lib/shop-types';
@@ -1208,7 +1209,7 @@ export function AdminApp() {
     setTab('orders');
   }
 
-  if (authed === null) return <div className="admin-app"><div className="login-wrap"><p className="muted">Loading…</p></div></div>;
+  if (authed === null) return <div className="admin-app"><div className="login-wrap"><Loader label="Opening the shop" /></div></div>;
   if (!authed) return <div className="admin-app"><Login onOk={() => { setAuthed(true); bump(); }} /></div>;
 
   return (
@@ -1229,18 +1230,22 @@ export function AdminApp() {
         <header className="top">
           <div>
             <h1>{TABS.find(t => t.id === tab)?.label}</h1>
-            <p className="muted">{stats ? `Live · ${stats.orders} orders · ${stats.visitors.today} visits today` : 'Loading…'}</p>
+            {stats ? (
+              <p className="muted">Live · {stats.orders} orders · {stats.visitors.today} visits today</p>
+            ) : (
+              <Loader compact label="Loading" />
+            )}
           </div>
           <button className="icon-btn" onClick={bump} aria-label="Refresh"><RefreshCw size={16} /></button>
         </header>
         {notice && tab === 'orders' && <p className="ok banner">{notice}</p>}
-        {tab === 'dashboard' && (stats ? <Dashboard stats={stats} goOrders={goOrders} goSales={() => setTab('sale')} /> : <p className="muted">Loading dashboard…</p>)}
+        {tab === 'dashboard' && (stats ? <Dashboard stats={stats} goOrders={goOrders} goSales={() => setTab('sale')} /> : <Loader label="Loading the dashboard" />)}
         {tab === 'sale' && <NewSale bump={bump} refreshKey={refreshKey} notice={notice} onCreated={id => setNotice(`${id} is in the sales list. The customer can track the same progress.`)} />}
         {tab === 'orders' && <Orders initialFilter={orderFilter} refreshKey={refreshKey} bump={bump} />}
         {tab === 'products' && <Products refreshKey={refreshKey} bump={bump} />}
         {tab === 'customers' && <Customers />}
         {tab === 'reports' && <Reports />}
-        {tab === 'visitors' && (stats ? <Visitors stats={stats} /> : <p className="muted">Loading…</p>)}
+        {tab === 'visitors' && (stats ? <Visitors stats={stats} /> : <Loader label="Loading visitors" />)}
         {tab === 'settings' && <Settings bump={bump} />}
       </main>
     </div></div>

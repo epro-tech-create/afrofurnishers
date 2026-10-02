@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, Truck, Banknote, PackageSearch, RotateCcw, Shoppin
 import { money } from '@/lib/catalog';
 import { DELIVERY_FEES, type Order } from '@/lib/shop-types';
 import { AccountAuth } from './account-auth';
+import { Loader } from './loader';
 import { useStore } from './store';
 
 export function CartPage() {
@@ -237,7 +238,8 @@ export function CheckoutPage() {
     return (
       <section className="page article">
         <p className="eyebrow">CHECKOUT</p>
-        <h1>Checking your account…</h1>
+        <h1>Checkout</h1>
+        <Loader label="Checking your account" />
       </section>
     );
   }
@@ -440,7 +442,8 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
     return (
       <section className="page article">
         <p className="eyebrow">TRACK ORDER</p>
-        <h1>Checking your account…</h1>
+        <h1>Where is my furniture?</h1>
+        <Loader label="Checking your account" />
       </section>
     );
   }
@@ -467,6 +470,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
         </label>
         <button className="button">{loading ? 'Searching…' : 'Track'}</button>
       </form>
+      {loading && <Loader label="Looking up the order" />}
       {error && <p role="alert" className="form-error">{error}</p>}
       {!order && !error && (
         <p className="hub-hint"><PackageSearch size={16} /> The number was on your confirmation. You can also open <Link className="text-link" href="/orders">every order on this account</Link>.</p>
@@ -565,7 +569,8 @@ export function OrdersDashboardPage() {
     return (
       <section className="page orders-page">
         <p className="eyebrow">MY ORDERS</p>
-        <h1>Checking your account…</h1>
+        <h1>Your orders</h1>
+        <Loader label="Checking your account" />
       </section>
     );
   }
@@ -591,7 +596,7 @@ export function OrdersDashboardPage() {
         <button type="button" className="text-link" onClick={() => logout()}>Sign out</button>
       </div>
       {error && <p role="alert" className="form-error">{error}</p>}
-      {loading && <p className="muted">Loading your orders…</p>}
+      {loading && <Loader label="Loading your orders" />}
 
       {!orders && !error && !loading && (
         <p className="muted"><ShoppingBag size={14} /> Orders placed with this account appear here. Have one number? <Link className="text-link" href="/track">Look it up →</Link></p>
@@ -670,7 +675,8 @@ export function AccountPage() {
     return (
       <section className="page article">
         <p className="eyebrow">ACCOUNT</p>
-        <h1>Checking your account…</h1>
+        <h1>Your account</h1>
+        <Loader label="Checking your account" />
       </section>
     );
   }
@@ -709,7 +715,7 @@ export function AccountPage() {
               <Link className="text-link" href={`/order/${latest.id}`}>Track this order</Link>
             </div>
           ) : (
-            <p className="muted">{orders ? 'No orders yet. Your first checkout will show up here.' : 'Loading your orders…'}</p>
+            {orders ? <p className="muted">No orders yet. Your first checkout will show up here.</p> : <Loader label="Loading your orders" />}
           )}
         </article>
         <div className="hub-card hub-actions-stack">

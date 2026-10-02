@@ -8,6 +8,7 @@ import { money, rooms } from '@/lib/catalog';
 import type { ProductFull } from '@/lib/shop-types';
 import { Reveal } from './motion';
 import { usePrefs } from './prefs';
+import { Loader } from './loader';
 import { useStore } from './store';
 
 function StockBadge({ stock }: { stock: number }) {
@@ -206,8 +207,10 @@ export function Shop({ initialCategory = 'All' }: { initialCategory?: string }) 
         </select>
         <label className="check"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} /> In stock only</label>
       </div>
-      <p className="muted" aria-live="polite">{productsReady ? `${filtered.length} items` : 'Loading…'}</p>
-      {filtered.length ? (
+      <p className="muted" aria-live="polite">{productsReady ? `${filtered.length} items` : ''}</p>
+      {!productsReady ? (
+        <Loader label="Loading the collection" />
+      ) : filtered.length ? (
         <ProductGrid items={filtered} />
       ) : (
         <div className="empty">
