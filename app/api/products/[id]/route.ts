@@ -1,0 +1,45 @@
+import { NextResponse } from 'next/server';
+import { readDB, writeDB } from '@/lib/db';
+import { isAdminRequest } from '@/lib/admin-auth';
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const db = await readDB();
+  const p = db.products.find(p => p.id === id);
+  if (!p) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!p.active && !await isAdminRequest(req)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json({ product: p });
+}
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  const db = await readDB();
+  const i = db.products.findIndex(p => p.id === id);
+  if (i < 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const allowed = ['name', 'category', 'price', 'oldPrice', 'image', 'material', 'dimensions', 'color', 'stock', 'description', 'featured', 'active'];
+  const updated = { ...db.products[i] };
+  for (const k of allowed) {
+    if (k in body) (updated as Record<string, unknown>)[k] = body[k];
+  }
+  if (typeof updated.price === 'number') updated.price = Math.max(0, Math.round(updated.price));
+  if (typeof updated.stock === 'number') updated.stock = Math.max(0, Math.floor(updated.stock));
+  updated.updatedAt = new Date().toISOString();
+  db.products[i] = updated;
+  await writeDB(db);
+  return NextResponse.json({ product: updated });
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const db = await readDB();
+  const i = db.products.findIndex(p => p.id === id);
+  if (i < 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Soft-delete so past orders keep their history; hard-delete only via active=false + remove
+  db.products[i] = { ...db.products[i], active: false, updatedAt: new Date().toISOString() };
+  await writeDB(db);
+  return NextResponse.json({ ok: true });
+}

@@ -1,0 +1,367 @@
+
+.admin-app { min-height: 100vh; background: #fff; color: #111; }
+.admin-app h1, .admin-app h2, .admin-app h3 {
+  font-family: Figtree, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.admin-app{
+  --bg: #fff;
+  --card: #fff;
+  --ink: #111;
+  --ink-soft: #444;
+  --line: #e5e5e5;
+  --orange: #e4572e;
+  --side: #111;
+  --side-ink: #fff;
+  --radius: 16px;
+}
+
+.admin-app{ box-sizing: border-box; }
+.admin-app{
+  margin: 0;
+  font-family: 'Figtree', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.admin-app button, .admin-app input, .admin-app select, .admin-app textarea{ font: inherit; color: inherit; }
+.admin-app button{ cursor: pointer; }
+.admin-app h1{ font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+.admin-app h4{ font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin: 18px 0 8px; }
+.admin-app .muted{ color: var(--ink-soft); font-size: 13px; }
+.admin-app .mono{ font-family: ui-monospace, monospace; font-size: 12px; }
+.admin-app .error{ color: #111; font-weight: 700; font-size: 13px; }
+.admin-app .ok{ color: var(--orange); font-weight: 700; font-size: 13px; }
+.admin-app code{ background: #f3f3f3; padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+
+
+.admin-app .login-wrap{ min-height: 100vh; display: grid; place-items: center; padding: 20px; background: #fff; }
+.admin-app .login-card{ width: min(400px, 94vw); background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px; display: grid; gap: 12px; box-shadow: 0 24px 60px #00000014; }
+.admin-app .login-card h1{ font-size: 24px; }
+.admin-app .brand{ display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-weight: 800; margin: 0; line-height: 1; }
+.admin-app .brand span{
+  display: inline-block; font-size: 22px; letter-spacing: -0.045em; font-weight: 800;
+  color: var(--orange); -webkit-text-fill-color: var(--orange);
+}
+.admin-app .brand em{ display: block; font-style: normal; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-soft); }
+.admin-app label{ display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.admin-app input, .admin-app select, .admin-app textarea{ padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; min-height: 44px; max-width: 100%; }
+.admin-app textarea{ min-height: 90px; }
+
+
+.admin-app .btn-primary{
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--orange); color: #fff;
+  border: 0; border-radius: 999px; padding: 13px 24px; font-weight: 800; font-size: 13px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.admin-app .btn-primary:disabled{ opacity: 0.6; cursor: wait; }
+.admin-app .btn-primary.sm, .admin-app .btn-ghost.sm{ padding: 9px 16px; font-size: 12px; }
+.admin-app .btn-ghost{ display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 13px 24px; font-weight: 700; font-size: 13px; }
+.admin-app .link{ color: var(--orange); font-weight: 700; font-size: 13px; background: none; border: 0; padding: 0; text-decoration: none; }
+.admin-app .link:hover{ text-decoration: underline; }
+.admin-app .icon-btn{ width: 40px; height: 40px; display: inline-grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: #fff; }
+.admin-app .icon-btn.danger{ color: #111; }
+
+
+.admin-app .shell{ display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.admin-app .side{ background: var(--side); color: var(--side-ink); padding: 26px 16px; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0; height: 100vh; }
+.admin-app .side .brand{ color: #fff; }
+.admin-app .side nav{ display: grid; gap: 4px; }
+.admin-app .side nav button{
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; border-radius: 12px;
+  background: transparent; color: #fff; font-weight: 600; font-size: 14px; text-align: left; width: 100%;
+}
+.admin-app .side nav button:hover{ background: #ffffff14; color: #fff; }
+.admin-app .side nav button.active{ background: var(--orange); color: #fff; }
+.admin-app .nav-count{
+  position: static; top: auto; left: auto; margin-left: auto;
+  background: #fff; color: #111; font-size: 11px; font-weight: 800;
+  letter-spacing: 0; border-radius: 999px; padding: 2px 8px;
+}
+.admin-app .signout{ margin-top: auto; display: flex; align-items: center; gap: 10px; background: transparent; border: 1px solid #ffffff33; color: #fff; border-radius: 12px; padding: 12px 14px; font-weight: 600; }
+.admin-app .signout:hover{ color: #fff; border-color: #ffffff55; }
+.admin-app main{ padding: 28px 32px 60px; max-width: 1240px; }
+.admin-app .top{ display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 22px; }
+
+
+.admin-app .grid{ display: grid; gap: 18px; }
+.admin-app .card{ background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.admin-app .card > header{ display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.admin-app .card h3{ margin: 0; font-size: 16px; letter-spacing: -0.01em; }
+.admin-app .cols-2{ display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; }
+.admin-app .stat-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-app .stat-grid.cols-3{ grid-template-columns: repeat(3, 1fr); }
+.admin-app .stat{ background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; gap: 12px; align-items: flex-start; position: relative; overflow: hidden; }
+.admin-app .stat::before{ content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.admin-app .tone-orange::before,
+.admin-app .tone-gold::before,
+.admin-app .tone-red::before{ background: var(--orange); }
+.admin-app .tone-forest::before,
+.admin-app .tone-plum::before,
+.admin-app .tone-blue::before{ background: #111; }
+.admin-app .stat-icon{ width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #fff; color: var(--orange); border: 1px solid var(--line); flex-shrink: 0; }
+.admin-app .stat small{ display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.admin-app .stat .stat-copy{ min-width: 0; }
+.admin-app .stat strong{ display: block; font-size: 22px; letter-spacing: -0.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.admin-app .stat .muted{ font-size: 12px; }
+
+
+.admin-app .chart svg{ width: 100%; height: 150px; display: block; }
+.admin-app .chart .grid{ stroke: var(--line); stroke-width: 1; }
+.admin-app .chart .line{ fill: none; stroke: var(--orange); stroke-width: 2.5; stroke-linecap: round; }
+.admin-app .chart .dot{ fill: var(--orange); stroke: #fff; stroke-width: 2; }
+.admin-app .chart-tip{ font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+.admin-app .bars{ display: flex; align-items: end; gap: 7px; min-height: 170px; }
+.admin-app .bar-col{ flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.admin-app .bar{ width: 100%; max-width: 30px; border-radius: 6px 6px 2px 2px; background: var(--orange); }
+.admin-app .bar-col small{ font-size: 10px; color: var(--ink-soft); }
+
+
+.admin-app .pipeline{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.admin-app .pipe{ border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 12px 8px; display: grid; gap: 2px; text-align: center; }
+.admin-app .pipe:hover{ border-color: var(--orange); transform: translateY(-2px); }
+.admin-app .pipe strong{ font-size: 22px; }
+.admin-app .pipe span{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
+
+
+.admin-app .row{ display: flex; justify-content: space-between; gap: 10px; font-size: 13px; margin: 9px 0; }
+.admin-app .row em{ color: var(--ink-soft); font-style: normal; }
+.admin-app .row.warn strong{ color: var(--orange); }
+.admin-app .table-wrap{ overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
+.admin-app .table-wrap > table{ width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-app .table-wrap > table.orders-table{ table-layout: fixed; }
+.admin-app .table-wrap > table.orders-table th:nth-child(1){ width: 15%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(2){ width: 24%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(3){ width: 8%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(4){ width: 16%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(5){ width: 15%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(6){ width: 14%; }
+.admin-app .table-wrap > table.orders-table td:nth-child(4),
+.admin-app .table-wrap > table.orders-table td:nth-child(5),
+.admin-app .table-wrap > table.orders-table td:nth-child(6){ white-space: nowrap; }
+.admin-app table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-app th{ text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.admin-app td{ padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.admin-app tr:last-child td{ border-bottom: 0; }
+.admin-app tr.warn td{ background: #fff; }
+.admin-app tr.order-open{ display: table-row; }
+.admin-app tr.order-open td{ display: table-cell; background: transparent; }
+.admin-app .pill{ display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.admin-app .st-pending{ background: #fff; color: #111; border-color: #111; }
+.admin-app .st-confirmed{ background: #fff; color: var(--orange); border-color: var(--orange); }
+.admin-app .st-preparing{ background: var(--orange); color: #fff; border-color: var(--orange); }
+.admin-app .st-delivering{ background: #111; color: #fff; border-color: #111; }
+.admin-app .st-delivered{ background: #111; color: #fff; border-color: #111; }
+.admin-app .st-cancelled{ background: #fff; color: #111; border-color: #111; }
+.admin-app .pay-paid{ background: #111; color: #fff; border-color: #111; }
+.admin-app .pay-unpaid{ background: #fff; color: #111; border-color: #111; }
+.admin-app .pay-pending-mpesa{ background: #fff; color: var(--orange); border-color: var(--orange); }
+.admin-app .toolbar{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.admin-app .search{ position: relative; display: flex; align-items: center; }
+.admin-app .search svg{ position: absolute; left: 11px; color: var(--ink-soft); }
+.admin-app .search input{ padding-left: 32px; min-width: 200px; }
+.admin-app .order-detail{ display: grid; grid-template-columns: 1fr 260px; gap: 18px; }
+.admin-app .order-detail p{ margin: 8px 0; font-size: 13px; }
+.admin-app .order-actions{ display: grid; gap: 10px; align-content: start; }
+.admin-app .actions{ white-space: nowrap; }
+.admin-app .stock-ctl{ display: inline-flex; align-items: center; gap: 8px; }
+.admin-app .mini{ width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-weight: 800; line-height: 1; }
+.admin-app .pform{ margin: 14px 0; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; display: grid; gap: 14px; }
+.admin-app .fgrid{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.admin-app .fgrid .full{ grid-column: 1 / -1; }
+.admin-app .check{ display: flex; align-items: center; gap: 8px; }
+.admin-app .check input{ width: 18px; height: 18px; min-height: 0; accent-color: var(--orange); }
+.admin-app .stack{ display: grid; gap: 12px; max-width: 420px; }
+
+@media (max-width: 1200px) {
+  .admin-app .stat-grid{ grid-template-columns: repeat(3, 1fr); }
+  .admin-app .cols-2{ grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .admin-app .shell{ grid-template-columns: 1fr; }
+  .admin-app .side{ position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .admin-app .side nav{ display: flex; flex-wrap: wrap; gap: 6px; }
+  .admin-app .signout{ margin: 0 0 0 auto; }
+  .admin-app main{ padding: 20px 16px 50px; }
+  .admin-app .stat-grid, .admin-app .stat-grid.cols-3{ grid-template-columns: 1fr 1fr; }
+  .admin-app .pipeline{ grid-template-columns: repeat(3, 1fr); }
+  .admin-app .fgrid, .admin-app .order-detail{ grid-template-columns: 1fr; }
+}
+
+
+.admin-app .banner{ margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--orange); color: #111; }
+.admin-app .side .brand em{ color: #fff; }
+.admin-app tr.order-open td{ width: auto; }
+.admin-app .manage{ width: 100%; box-sizing: border-box; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 8px; }
+.admin-app .lines{ table-layout: auto; width: 100%; }
+.admin-app .lines td:first-child{ white-space: normal; }
+.admin-app .manage-kicker{ margin: 0 0 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.admin-app .manage-layout{ display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+.admin-app .vstep{ list-style: none; margin: 0; padding: 0; }
+.admin-app .vstep li{ position: relative; }
+.admin-app .vstep li:not(:last-child)::before{
+  content: ''; position: absolute; left: 15px; top: 34px; bottom: 0; width: 2px; background: #e5e5e5;
+}
+.admin-app .vstep li.done::before{ background: var(--orange); }
+.admin-app .vstep button{
+  display: flex; gap: 12px; align-items: flex-start; width: 100%;
+  background: none; border: 0; padding: 0 0 18px; text-align: left; color: #111;
+}
+.admin-app .vstep .vdot{
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  border: 2px solid #111; background: #fff; color: #111; font-weight: 800; font-size: 13px; position: relative; z-index: 1;
+}
+.admin-app .vstep li.done .vdot{ background: var(--orange); border-color: var(--orange); color: #fff; }
+.admin-app .vstep li.current .vdot{ background: #111; border-color: #111; color: #fff; box-shadow: 0 0 0 4px #11111122; }
+.admin-app .vstep .vcopy{ display: grid; gap: 2px; padding-top: 2px; }
+.admin-app .vstep small{ font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #444; }
+.admin-app .vstep strong{ font-size: 15px; color: #111; }
+.admin-app .vstep li.current strong{ color: var(--orange); }
+.admin-app .manage-grid{ display: grid; grid-template-columns: 1.35fr 0.8fr; gap: 22px; align-items: start; }
+.admin-app .lines{ width: 100%; border-collapse: collapse; }
+.admin-app .lines td{ padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; background: transparent; }
+.admin-app .lines td strong{ display: block; }
+.admin-app .lines td small{ display: block; margin-top: 2px; font-size: 12px; }
+.admin-app .lines td:nth-child(2){ width: auto; color: inherit; }
+.admin-app .lines td:last-child{ text-align: right; font-weight: 700; white-space: nowrap; }
+.admin-app .lines tr.total td{ border-bottom: 0; font-size: 16px; padding-top: 12px; }
+.admin-app .manage-side p{ margin: 3px 0; font-size: 14px; line-height: 1.45; }
+.admin-app .manage-side .who{ font-weight: 800; font-size: 16px; margin-bottom: 6px; }
+.admin-app .manage-links{ display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 4px; }
+.admin-app .link.danger{ color: #111; }
+.admin-app .sale{ display: grid; grid-template-columns: 1.45fr 0.75fr; gap: 18px; align-items: start; }
+.admin-app .sale-scroll{ max-height: 280px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+.admin-app .piece-table{ width: 100%; border-collapse: collapse; }
+.admin-app .piece-table th{ position: sticky; top: 0; background: #fff; z-index: 1; }
+.admin-app .piece-table select, .admin-app .piece-table input{ width: 100%; min-height: 36px; }
+.admin-app .piece-table .qty-cell{ width: 72px; }
+.admin-app .piece-table tr.over td{ background: #f6f6f6; }
+.admin-app .receipt-lines{ max-height: 220px; overflow: auto; }
+.admin-app .pager{ display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 12px; }
+.admin-app .quote{ display: grid; gap: 8px; padding-top: 4px; }
+.admin-app .quote p{ display: flex; justify-content: space-between; gap: 12px; margin: 0; font-size: 14px; }
+.admin-app .quote .total{ padding-top: 8px; border-top: 1px solid var(--line); font-size: 16px; }
+.admin-app tr.order-open td{ background: transparent; padding-top: 0; }
+
+.admin-app .modal-back{
+  position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.55);
+  display: grid; place-items: center; padding: 20px;
+}
+.admin-app .modal{
+  width: min(560px, 100%); max-height: min(90vh, 920px); overflow: auto;
+  background: #fff; border-radius: 20px; padding: 20px 22px 22px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+}
+.admin-app .modal.wide{ width: min(860px, calc(100vw - 40px)); }
+.admin-app .modal-head{ display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.admin-app .modal h2{ margin: 0; font-size: 22px; }
+.admin-app .sale-launch{
+  max-width: 520px; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 28px;
+}
+.admin-app .sale-launch h2{ margin: 0 0 8px; font-size: 28px; }
+.admin-app .sale-launch p{ margin: 0 0 18px; color: var(--ink-soft); }
+.admin-app .modal.wide{ width: min(980px, calc(100vw - 40px)); }
+.admin-app .pos{ display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.admin-app .pos-receipt{
+  background: #fff; border: 1px solid #111; border-radius: 16px; padding: 16px;
+  display: grid; gap: 10px; align-content: start; position: sticky; top: 0;
+}
+.admin-app .pos-row{
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start;
+  margin: 0; font-size: 14px;
+}
+.admin-app .pos-row > span{ min-width: 0; display: grid; gap: 2px; }
+.admin-app .pos-row strong{ justify-self: end; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.admin-app .pos-row small{ color: var(--ink-soft); font-size: 12px; font-weight: 600; }
+.admin-app .pos-row.total{ border-top: 1px solid var(--line); padding-top: 10px; font-size: 18px; }
+.admin-app .pos-receipt .btn-primary{ width: 100%; flex-direction: column; gap: 2px; white-space: normal; line-height: 1.2; }
+.admin-app .pos-receipt .btn-primary strong{ font-size: 16px; color: #fff; }
+.admin-app .pos-lines-head{ display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.admin-app .pos-actions{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.admin-app .sale-lead{ margin: 0; }
+.admin-app .sales-bar{ display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 14px; flex-wrap: wrap; }
+.admin-app .sales-bar .search{ min-width: min(320px, 100%); }
+.admin-app .sales-table{ table-layout: fixed; width: 100%; }
+.admin-app .sales-table td{ vertical-align: top; }
+.admin-app .sales-table th:nth-child(1), .admin-app .sales-table td:nth-child(1){ width: 16%; }
+.admin-app .sales-table th:nth-child(2), .admin-app .sales-table td:nth-child(2){ width: 13%; }
+.admin-app .sales-table th:nth-child(3), .admin-app .sales-table td:nth-child(3){ width: 26%; }
+.admin-app .sales-table th:nth-child(4), .admin-app .sales-table td:nth-child(4){ width: 13%; }
+.admin-app .sales-table th:nth-child(5), .admin-app .sales-table td:nth-child(5){ width: 9%; }
+.admin-app .sales-table th:nth-child(6), .admin-app .sales-table td:nth-child(6){ width: 15%; }
+.admin-app .sales-table th:nth-child(7), .admin-app .sales-table td:nth-child(7){ width: 8%; }
+.admin-app .sales-table .nowrap{ white-space: nowrap; }
+.admin-app .piece-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.admin-app .piece-list li{ font-size: 13px; line-height: 1.35; overflow-wrap: break-word; }
+.admin-app .report-list{ display: grid; gap: 12px; max-width: 760px; }
+.admin-app .report-card{
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px;
+}
+.admin-app .report-card strong{ display: block; font-size: 16px; color: #111; }
+.admin-app .report-card p{ margin: 4px 0 0; }
+.admin-app .line-math, .admin-app .line-sum{ margin: 0; font-size: 14px; }
+
+.admin-app,
+.admin-app p,
+.admin-app td,
+.admin-app label,
+.admin-app li,
+.admin-app h1,
+.admin-app h2,
+.admin-app h3{ color: #111; }
+.admin-app .muted,
+.admin-app th,
+.admin-app h4,
+.admin-app .stat small,
+.admin-app .pipe span,
+.admin-app .chart-tip,
+.admin-app .bar-col small,
+.admin-app .manage-kicker{ color: #444; }
+.admin-app input,
+.admin-app select,
+.admin-app textarea{ color: #111; background: #fff; }
+.admin-app input::placeholder,
+.admin-app textarea::placeholder{ color: #666; opacity: 1; }
+.admin-app .side,
+.admin-app .side nav button,
+.admin-app .signout{ color: #fff; }
+.admin-app .side .brand em{ color: #fff; }
+.admin-app .side nav button.active,
+.admin-app .btn-primary{ color: #fff; }
+.admin-app .nav-count{ color: #111; }
+.admin-app table{ font-size: 14px; }
+.admin-app th{ font-size: 12px; letter-spacing: 0.04em; }
+.admin-app .error{ color: #111; }
+.admin-app .ok{ color: var(--orange); }
+.admin-app .link{ color: var(--orange); }
+.admin-app .link.danger{ color: #111; text-decoration: underline; }
+.admin-app .pos-row small{ color: #444; }
+.admin-app .pill{ color: #111; }
+.admin-app .st-pending,
+.admin-app .pay-unpaid,
+.admin-app .st-cancelled{ color: #111; background: #fff; border-color: #111; }
+.admin-app .st-confirmed,
+.admin-app .pay-pending-mpesa{ color: var(--orange); background: #fff; border-color: var(--orange); }
+.admin-app .st-preparing{ color: #fff; background: var(--orange); border-color: var(--orange); }
+.admin-app .st-delivering,
+.admin-app .st-delivered,
+.admin-app .pay-paid{ color: #fff; background: #111; border-color: #111; }
+.admin-app .line-sum{ text-align: right; }
+
+@media (max-width: 980px) {
+  .admin-app .manage-layout, .admin-app .manage-grid, .admin-app .sale, .admin-app .pos{ grid-template-columns: 1fr; }
+  .admin-app .report-card{ grid-template-columns: 44px minmax(0, 1fr); }
+  .admin-app .report-card .btn-primary{ grid-column: 1 / -1; }
+  .admin-app .piece-table .qty-cell{ width: 64px; }
+}
+
+.admin-app header, .admin-app .top {
+  position: static; height: auto; left: auto; right: auto; top: auto;
+  z-index: 1; background: transparent; border: 0; box-shadow: none;
+  backdrop-filter: none; padding: 0;
+}
+.admin-app .card > header { display: flex; justify-content: space-between; align-items: center; }

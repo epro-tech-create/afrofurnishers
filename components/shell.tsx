@@ -4,9 +4,30 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { MotionConfig, motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ArrowUpRight, Sun, Moon } from 'lucide-react';
+import { Menu, X, ArrowUpRight, Sun, Moon, ShoppingBag } from 'lucide-react';
 import { PrefsProvider, usePrefs } from './prefs';
+import { StoreProvider, useStore } from './store';
+import { CartDrawer } from './cart-drawer';
+import { VisitTracker } from './visit-tracker';
 import { ScrollProgress } from './motion';
+
+function AccountLink() {
+  const { customer, customerReady } = useStore();
+  if (!customerReady) return <span className="tools-link tools-link-quiet">Account</span>;
+  if (!customer) return <Link className="tools-link" href="/account">Sign in</Link>;
+  const first = customer.name.split(' ')[0];
+  return <Link className="tools-link" href="/account">{first}</Link>;
+}
+
+function CartButton() {
+  const { count, setCartOpen } = useStore();
+  return (
+    <button type="button" className="icon-btn cart-btn" onClick={() => setCartOpen(true)} aria-label={`Open bag, ${count} items`}>
+      <ShoppingBag size={17} />
+      {count > 0 && <span className="cart-count" aria-hidden>{count > 99 ? '99+' : count}</span>}
+    </button>
+  );
+}
 
 function Header() {
   const [open, setOpen] = useState(false);
@@ -59,6 +80,9 @@ function Header() {
         })}
       </nav>
       <div className="tools">
+        <Link className="tools-link" href="/orders">Orders</Link>
+        <AccountLink />
+        <CartButton />
         <button type="button" className="icon-btn" onClick={toggleTheme} aria-label={theme === 'light' ? t.themeDark : t.themeLight}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -73,7 +97,7 @@ function Header() {
             </motion.span>
           </AnimatePresence>
         </button>
-        <a className="button button-sm header-cta" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.heroSecondary}</a>
+        <Link className="button button-sm header-cta" href="/shop">{t.heroSecondary}</Link>
         <button className="mobile-menu" aria-label="Toggle navigation" aria-controls="primary-nav" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? <X size={21} /> : <Menu size={21} />}
         </button>
@@ -91,14 +115,15 @@ function Footer() {
           <p className="eyebrow">{t.ctaEyebrow}</p>
           <h2>{t.ctaTitle}</h2>
           <p className="footer-lead">{t.footerLead}</p>
-          <a className="button" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.footerTalk} <ArrowUpRight size={17} /></a>
+          <Link className="button" href="/shop">{t.footerTalk} <ArrowUpRight size={17} /></Link>
         </div>
         <div>
           <p>{t.footerExplore}</p>
           <Link href="/shop">{t.nav[1][1]}</Link>
-          <Link href="/#rooms">{t.nav[2][1]}</Link>
+          <Link href="/orders">{t.nav[4][1]}</Link>
+          <Link href="/account">Account</Link>
           <Link href="/story">{t.nav[3][1]}</Link>
-          <a href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.nav[4][1]}</a>
+          <Link href="/contact">Contact</Link>
         </div>
         <div>
           <p>{t.footerInfo}</p>
@@ -127,7 +152,7 @@ function LegacyLinks() {
   useEffect(() => {
     const hash = window.location.hash.slice(1);
     const route = hash.split('/')[0];
-    if (['home', 'shop', 'collections', 'product', 'cart', 'wishlist', 'custom', 'story', 'contact', 'care', 'delivery', 'privacy', 'credits', 'inspiration', 'article', 'checkout'].includes(route)) {
+    if (['home', 'shop', 'collections', 'product', 'cart', 'wishlist', 'custom', 'story', 'contact', 'care', 'delivery', 'privacy', 'credits', 'inspiration', 'article', 'checkout', 'track', 'order', 'orders', 'account'].includes(route)) {
       router.replace(route === 'home' ? '/' : '/' + hash);
     }
   }, [router]);
@@ -140,15 +165,21 @@ function ShellSkip() {
 }
 
 export function Shell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return <>{children}</>;
   return (
     <MotionConfig reducedMotion="user">
       <PrefsProvider>
-        <LegacyLinks />
-        <ScrollProgress />
-        <ShellSkip />
-        <Header />
-        <main id="main" tabIndex={-1}>{children}</main>
-        <Footer />
+        <StoreProvider>
+          <LegacyLinks />
+          <ScrollProgress />
+          <VisitTracker />
+          <ShellSkip />
+          <Header />
+          <main id="main" tabIndex={-1}>{children}</main>
+          <Footer />
+          <CartDrawer />
+        </StoreProvider>
       </PrefsProvider>
     </MotionConfig>
   );

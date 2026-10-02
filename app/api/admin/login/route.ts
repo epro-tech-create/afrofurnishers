@@ -1,0 +1,60 @@
+import { NextResponse } from 'next/server';
+import {
+  adminCookieHeader,
+  adminToken,
+  clearAdminCookieHeader,
+  clientIp,
+  isAdminRequest,
+  isPasswordSetViaEnv,
+  loginBlocked,
+  recordLoginAttempt,
+  hashPassword,
+  verifyPassword,
+} from '@/lib/admin-auth';
+import { readDB, writeDB } from '@/lib/db';
+
+export async function GET(req: Request) {
+  return NextResponse.json({ authenticated: await isAdminRequest(req) });
+}
+
+export async function POST(req: Request) {
+  const ip = clientIp(req);
+  if (loginBlocked(ip)) {
+    return NextResponse.json({ error: 'Too many attempts — try again in 10 minutes' }, { status: 429 });
+  }
+  const body = await req.json().catch(() => null);
+  const password = String(body?.password || '');
+  const ok = password.length > 0 && (await verifyPassword(password));
+  recordLoginAttempt(ip, ok);
+  if (!ok) {
+    return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
+  }
+  // Token auth for the standalone admin app (own port) + cookie for same-origin.
+  const res = NextResponse.json({ ok: true, token: await adminToken() });
+  res.headers.set('Set-Cookie', await adminCookieHeader());
+  return res;
+}
+
+export async function PATCH(req: Request) {
+  if (!(await isAdminRequest(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (await isPasswordSetViaEnv()) {
+    return NextResponse.json({ error: 'Password is set via ADMIN_PASSWORD — change it on the server, not here' }, { status: 400 });
+  }
+  const body = await req.json().catch(() => null);
+  const current = String(body?.current || '');
+  const next = String(body?.next || '');
+  if (next.length < 8) return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 });
+  if (!(await verifyPassword(current))) return NextResponse.json({ error: 'Current password is wrong' }, { status: 401 });
+  const db = await readDB();
+  db.admin = { passwordHash: hashPassword(next), updatedAt: new Date().toISOString() };
+  await writeDB(db);
+  const res = NextResponse.json({ ok: true, token: await adminToken() });
+  res.headers.set('Set-Cookie', await adminCookieHeader());
+  return res;
+}
+
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.headers.set('Set-Cookie', clearAdminCookieHeader());
+  return res;
+}

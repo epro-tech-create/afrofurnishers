@@ -7,11 +7,11 @@ export const pages: Record<string, string[]> = {
     'This website helps you browse what we sell. Contact us when you are ready to buy.',
   ],
   contact: [
-    'WHATSAPP ORDERS',
-    'Order directly on WhatsApp.',
+    'CONTACT US',
+    'Talk to a human.',
     'We are based in Dar es Salaam, Tanzania.',
-    'All orders and enquiries go to WhatsApp: +255 692 009 222. Tell us the furniture you want, quantity, budget and delivery area.',
-    'Open WhatsApp from the buttons on this site, or message that number to place your order.',
+    'Call us on +255 692 009 222 for advice on size, style and budget.',
+    'To buy, browse the shop, create an account and check out online. You can then track the order until it arrives.',
   ],
   care: [
     'FURNITURE CARE',
@@ -22,13 +22,13 @@ export const pages: Record<string, string[]> = {
   delivery: [
     'DELIVERY',
     'Delivery across Tanzania.',
-    'Delivery areas, timing and fees are agreed when you buy.',
-    'This website does not calculate delivery or take payment online.',
+    'Delivery fees depend on your area and are shown at checkout, starting from TZS 15,000 in Dar es Salaam.',
+    'Pay with M-Pesa or cash on delivery. Sign in to track the order until it arrives.',
   ],
   privacy: [
     'PRIVACY',
     'Your information.',
-    'This is a demonstration site. Theme preferences stay in your browser.',
-    'Full privacy terms will be published before collecting customer details online.',
+    'When you create an account we store your name, phone number and a protected password so you can check out and track orders.',
+    'We use those details to deliver furniture and to show you your own orders. We do not sell your information.',
   ],
 };

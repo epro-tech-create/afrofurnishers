@@ -2,10 +2,15 @@
   "name": "afrofurnitures",
   "version": "2.0.0",
   "private": true,
+  "workspaces": ["admin"],
   "scripts": {
     "dev": "next dev --port 4173",
+    "dev:shop": "next dev --port 4173",
+    "dev:admin": "next dev --port 4173",
     "build": "next build",
+    "build:admin": "next build",
     "start": "next start --port 4173",
+    "start:admin": "next start --port 4173",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": { "next": "latest", "react": "latest", "react-dom": "latest", "motion": "latest", "lucide-react": "latest" },

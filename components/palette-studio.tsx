@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
-import { orderWhatsApp } from '@/lib/whatsapp';
 import { Reveal } from './motion';
 
 const moods = [
@@ -95,9 +94,9 @@ export function PaletteStudio() {
               </motion.div>
             </AnimatePresence>
           </div>
-          <a className="text-link" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">
+          <Link className="text-link" href="/shop">
             Use this look when you shop <ArrowUpRight size={16} />
-          </a>
+          </Link>
         </div>
       </motion.div>
     </section>

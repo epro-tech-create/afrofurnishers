@@ -1,0 +1,13 @@
+---
+description: Push project code to GitHub after changes
+alwaysApply: true
+---
+
+# Push changes to GitHub
+
+After finishing a code change in this project, commit the relevant source and push it to `origin` on the current branch.
+
+- Include application source. Leave out `node_modules`, `.next`, `.env*.local`, and `data/shop-db.json` (it holds customer records and password hashes).
+- Do not commit secrets. `.env.example` may be committed; `.env.local` must not.
+- Push with `git push` to the existing `origin`. Do not force-push.
+- If the user explicitly says not to commit or not to push for that turn, skip it.

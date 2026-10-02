@@ -1,0 +1,23 @@
+{
+  "name": "afrofurnitures-admin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo Admin is http://localhost:4173/admin — run npm run dev from the project root.& exit /b 1",
+    "build": "echo Admin builds with the shop. Run npm run build from the project root.& exit /b 1",
+    "start": "echo Admin is served by the shop on port 4173 at /admin.& exit /b 1",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest"
+  }
+}

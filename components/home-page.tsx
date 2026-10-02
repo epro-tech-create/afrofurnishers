@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { ArrowUpRight, CheckCircle2, Target, Eye, Shield, Heart, Handshake, Award, Home } from 'lucide-react';
 import { Hero, Reveal, FadeUp, TestimonialsStage, MagneticLink } from '@/components/motion';
 import { ClientsMarquee } from '@/components/clients-marquee';
+import { Collection } from '@/components/products';
 import { usePrefs } from '@/components/prefs';
 
 export function HomePage() {
@@ -25,6 +26,8 @@ export function HomePage() {
 
       <ClientsMarquee />
 
+      <Collection />
+
       <section className="section soft featured-piece">
         <Reveal>
           <div className="featured-layout">
@@ -39,7 +42,7 @@ export function HomePage() {
                 <span>Living room</span>
                 <span>Order now</span>
               </div>
-              <a className="button" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.enquire} <ArrowUpRight size={16} /></a>
+              <Link className="button" href="/shop">{t.enquire} <ArrowUpRight size={16} /></Link>
             </div>
           </div>
         </Reveal>
@@ -58,7 +61,7 @@ export function HomePage() {
             {[
               { href: '/shop/Living%20Room', img: '/assets/hero.jpg', title: t.living, sub: t.livingSub, external: false },
               { href: '/shop/Dining%20Room', img: '/assets/dining.jpg', title: t.dining, sub: t.diningSub, external: false },
-              { href: t.whatsappUrl, img: '/assets/sofa.jpg', title: t.custom, sub: t.customSub, external: true },
+              { href: '/shop/Office', img: '/assets/sofa.jpg', title: t.custom, sub: t.customSub, external: false },
             ].map((room, i) => (
               <FadeUp key={room.href} delay={i * 0.1}>
                 {room.external ? (
@@ -125,7 +128,7 @@ export function HomePage() {
               <div className="mv-photo-copy">
                 <span className="mv-icon"><Target size={22} /></span>
                 <p className="eyebrow">{t.missionLabel}</p>
-                <p>{t.mission}</p>
+                <p className="mv-copy">{t.mission}</p>
               </div>
             </motion.article>
             <motion.article className="mv-card mv-photo" whileHover={{ y: -6 }} transition={{ duration: 0.25 }}>
@@ -133,7 +136,7 @@ export function HomePage() {
               <div className="mv-photo-copy">
                 <span className="mv-icon"><Eye size={22} /></span>
                 <p className="eyebrow">{t.visionLabel}</p>
-                <p>{t.vision}</p>
+                <p className="mv-copy">{t.vision}</p>
                 <ul className="mv-points">
                   <li><Handshake size={16} /> Honest service</li>
                   <li><Award size={16} /> Quality products</li>
@@ -165,7 +168,7 @@ export function HomePage() {
         <Reveal>
           <h2>{t.ctaTitle}</h2>
           <p>{t.ctaLead}</p>
-          <MagneticLink href={t.whatsappUrl} className="button">{t.ctaButton} <ArrowUpRight size={17} /></MagneticLink>
+          <MagneticLink href="/shop" className="button">{t.ctaButton} <ArrowUpRight size={17} /></MagneticLink>
         </Reveal>
       </section>
     </>

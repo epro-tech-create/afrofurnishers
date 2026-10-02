@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { downloadText } from '@/lib/catalog';
-import { orderWhatsApp } from '@/lib/whatsapp';
 
 const initial = { Furniture: 'Sofa', Dimensions: '', Material: '', Colour: '', Budget: '', 'Delivery area': 'Kinondoni', Notes: '' };
 type Brief = typeof initial;
@@ -104,7 +103,7 @@ export function CustomForm() {
           <button className="button" onClick={() => downloadText('AfroFurnishers-project-notes.txt', 'AfroFurnishers project notes\nNot an order.\n\n' + summary.join('\n'))}>
             Download notes ↓
           </button>
-          <p><a className="text-link" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order now →</a></p>
+          <p><Link className="text-link" href="/shop">Browse furniture →</Link></p>
         </motion.div>
       )}
     </section>

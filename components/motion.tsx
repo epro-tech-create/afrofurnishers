@@ -150,7 +150,7 @@ export function Hero() {
           transition={{ delay: 0.55, duration: 0.65 }}
         >
           <MagneticLink href="/shop" className="button">{t.heroCta}</MagneticLink>
-          <a className="text-link light-link" href={t.whatsappUrl} target="_blank" rel="noopener noreferrer">{t.heroSecondary}</a>
+          <MagneticLink href="/checkout" className="text-link light-link">{t.heroSecondary}</MagneticLink>
         </motion.div>
       </motion.div>
 

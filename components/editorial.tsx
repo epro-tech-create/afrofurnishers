@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { pages } from '@/lib/pages';
-import { orderWhatsApp } from '@/lib/whatsapp';
 import { Reveal } from './motion';
 
 export function InformationPage({ name }: { name: string }) {
@@ -12,9 +11,9 @@ export function InformationPage({ name }: { name: string }) {
       {name === 'story' && <img src="/assets/dining.jpg" alt="AfroFurnishers furniture for Tanzanian homes" width={1000} height={700} />}
       {content.slice(2).map(text => <p key={text}>{text}</p>)}
       <div className="buttons">
-        <a href={orderWhatsApp()} className="button" target="_blank" rel="noopener noreferrer">
-          Order now →
-        </a>
+        <Link href="/shop" className="button">
+          Browse furniture →
+        </Link>
         <Link href="/shop" className="text-link">See our work →</Link>
       </div>
     </section>
@@ -57,7 +56,7 @@ export function Article({ id }: { id: string }) {
           ? 'Measure the room, leave walking space, and pick a size that fits everyday meals in a Tanzanian home.'
           : 'Start with comfortable seating, warm colours and clear pathways. One good sofa can set the tone for the whole room.'}
       </p>
-      <a className="button" href={orderWhatsApp()} target="_blank" rel="noopener noreferrer">Order now →</a>
+      <Link className="button" href="/shop">Browse furniture →</Link>
     </section>
   );
 }

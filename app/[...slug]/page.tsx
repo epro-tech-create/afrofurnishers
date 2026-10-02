@@ -1,41 +1,53 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { products, rooms } from '@/lib/catalog';
+import { readDB } from '@/lib/db';
 import { pages } from '@/lib/pages';
 import { Collection, ProductDetail, Shop } from '@/components/products';
-import { CartPage, CheckoutPage, WishlistPage } from '@/components/commerce-pages';
+import { AccountPage, CartPage, CheckoutPage, OrderTrackPage, OrdersDashboardPage, WishlistPage } from '@/components/commerce-pages';
 import { CustomForm } from '@/components/custom-form';
 import { Article, Credits, InformationPage, Journal } from '@/components/editorial';
 import { PaletteStudio } from '@/components/palette-studio';
 
-export const dynamicParams = false;
-export function generateStaticParams() {
-  return [
-    ...['shop', 'collections', 'cart', 'wishlist', 'custom', 'checkout', 'inspiration', 'credits', ...Object.keys(pages)].map(name => ({ slug: [name] })),
-    ...products.map(p => ({ slug: ['product', p.id] })),
-    ...rooms.filter(r => r !== 'All').map(r => ({ slug: ['shop', r] })),
-    ...['warmth', 'table'].map(id => ({ slug: ['article', id] })),
-  ];
-}
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
   const { slug } = await params;
-  const p = products.find(p => p.id === slug[1]);
-  const title = slug[0] === 'product' && p ? p.name : slug[0] === 'article' ? (slug[1] === 'table' ? 'Make space for a longer conversation' : 'A warmer way to come home') : slug[0].charAt(0).toUpperCase() + slug[0].slice(1);
-  return { title, description: `${title}: AfroFurnishers quality furniture for sale in Dar es Salaam, Tanzania.` };
+  const [page, arg] = slug || [];
+  if (page === 'product' && arg) {
+    try {
+      const db = await readDB();
+      const p = db.products.find(p => p.id === arg);
+      if (p) return { title: p.name, description: `${p.name}: ${p.description} Buy online in Dar es Salaam.` };
+    } catch { /* fallback */ }
+  }
+  if (page === 'article') return { title: arg === 'table' ? 'Make space for a longer conversation' : 'A warmer way to come home', description: 'AfroFurnishers ideas.' };
+  const title = page ? page.charAt(0).toUpperCase() + page.slice(1) : 'Home';
+  return { title, description: `${title}: AfroFurnishers quality furniture for sale in Dar es Salaam, Tanzania. Order online with M-Pesa or Cash on Delivery.` };
 }
+
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
-  const { slug: [page, arg] } = await params;
-  if (page === 'shop') return <Shop initialCategory={arg || 'All'} />;
-  if (page === 'product') { const p = products.find(p => p.id === arg); if (!p) notFound(); return <section className="page"><p className="muted"><Link href="/shop">Collection</Link> / {p.name}</p><ProductDetail product={p} /></section>; }
+  const { slug } = await params;
+  const [page, arg] = slug || [];
+  if (page === 'shop') return <Shop initialCategory={arg ? decodeURIComponent(arg) : 'All'} />;
+  if (page === 'product' && arg) {
+    const db = await readDB();
+    const p = db.products.find(p => p.id === arg && p.active);
+    if (!p) notFound();
+    return <section className="page"><p className="muted"><Link href="/shop">Shop</Link> / {p.name}</p><ProductDetail product={p} /></section>;
+  }
   if (page === 'collections') return <><Collection /><PaletteStudio /></>;
   if (page === 'cart') return <CartPage />;
   if (page === 'wishlist') return <WishlistPage />;
   if (page === 'checkout') return <CheckoutPage />;
+  if (page === 'track') return <OrderTrackPage initialId={arg ? decodeURIComponent(arg) : ''} />;
+  if (page === 'order' && arg) return <OrderTrackPage initialId={decodeURIComponent(arg)} />;
+  if (page === 'orders') return <OrdersDashboardPage />;
+  if (page === 'account') return <AccountPage />;
   if (page === 'custom') return <CustomForm />;
   if (page === 'inspiration') return <Journal />;
   if (page === 'article') return <Article id={arg} />;
   if (page === 'credits') return <Credits />;
-  if (pages[page]) return <InformationPage name={page} />;
+  if (page && pages[page]) return <InformationPage name={page} />;
   notFound();
 }
