@@ -645,7 +645,7 @@ function ProductCard({ p, onEdit, onDelete, onStock }: {
           <button className="mini" aria-label="Increase inventory" onClick={() => onStock(1)}>+</button>
         </span>
         <div className="inv-card-foot">
-          <span>{p.active ? <span className="pill st-delivered">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? ' ★' : ''}</span>
+          <span className="inv-status">{p.active ? <span className="pill live">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? <span className="inv-star" aria-label="Featured">★</span> : null}</span>
           <span>
             <button className="icon-btn" aria-label={`Edit ${p.name}`} onClick={onEdit}><Pencil size={14} /></button>
             <button className="icon-btn danger" aria-label={`Delete ${p.name}`} onClick={onDelete}><Trash2 size={14} /></button>
@@ -672,7 +672,7 @@ function ProductRow({ p, onEdit, onDelete, onStock }: {
           <button className="mini" aria-label="Increase inventory" onClick={() => onStock(1)}>+</button>
         </span>
       </td>
-      <td data-label="Status">{p.active ? <span className="pill st-delivered">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? ' ★' : ''}</td>
+      <td data-label="Status"><span className="inv-status">{p.active ? <span className="pill live">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? <span className="inv-star" aria-label="Featured">★</span> : null}</span></td>
       <td className="actions">
         <button className="icon-btn" aria-label={`Edit ${p.name}`} onClick={onEdit}><Pencil size={14} /></button>
         <button className="icon-btn danger" aria-label={`Delete ${p.name}`} onClick={onDelete}><Trash2 size={14} /></button>
