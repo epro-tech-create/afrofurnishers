@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
-  AlertTriangle, Banknote, Boxes, Check, Download, Eye, FileDown, LayoutDashboard, Lock, LogOut,
+  AlertTriangle, Banknote, Boxes, Check, Download, Eye, FileDown, LayoutDashboard, LayoutGrid, List, Lock, LogOut,
   MessageCircle, Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Trash2,
   TrendingUp, Users, Wallet, X,
 } from 'lucide-react';
@@ -469,6 +469,9 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Partial<ProductFull>>(EMPTY);
   const [error, setError] = useState('');
+  const [view, setView] = useState<'list' | 'cards'>('list');
+  const [pendingDelete, setPendingDelete] = useState<ProductFull | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -497,11 +500,20 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
     bump();
   }
 
-  async function hide(id: string) {
-    if (!confirm('Hide this product from the shop? Past orders keep their history.')) return;
-    await api(`/products/${id}`, { method: 'DELETE' });
-    await load();
-    bump();
+  async function remove(p: ProductFull) {
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/products/${p.id}`, { method: 'DELETE' });
+      setItems(items => items.filter(item => item.id !== p.id));
+      setPendingDelete(null);
+      if (editing === p.id) setEditing(null);
+      bump();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not delete that product');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function quickStock(p: ProductFull, delta: number) {
@@ -562,8 +574,12 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
   );
 
   return (
-    <Card wide title={`${list.length} products`} action={<div className="toolbar">
+    <Card wide title={`${list.length} products`} action={<div className="toolbar inv-toolbar">
       <div className="search"><Search size={14} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search products…" aria-label="Search products" /></div>
+      <div className="view-toggle" role="group" aria-label="Inventory layout">
+        <button type="button" className={view === 'list' ? 'on' : ''} aria-pressed={view === 'list'} aria-label="List view" onClick={() => setView('list')}><List size={16} /></button>
+        <button type="button" className={view === 'cards' ? 'on' : ''} aria-pressed={view === 'cards'} aria-label="Card view" onClick={() => setView('cards')}><LayoutGrid size={16} /></button>
+      </div>
       <button className="btn-primary sm" onClick={() => { setEditing(null); setDraft(EMPTY); setCreating(true); }}><Plus size={14} /> New</button>
     </div>}>
       {error && <p className="error">{error}</p>}
@@ -578,23 +594,70 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
           {form(draft, setDraft, editing)}
         </Modal>
       )}
-      <div className="table-wrap"><table className="stock-table list-table">
-        <thead><tr><th>Product</th><th>Price</th><th>Inventory</th><th>Status</th><th></th></tr></thead>
-        <tbody>
+      {pendingDelete && (
+        <Modal title="Delete product" onClose={() => { if (!busy) setPendingDelete(null); }}>
+          <p>Delete {pendingDelete.name}? It leaves the shop. Past sales stay as they are.</p>
+          <div className="profile-actions">
+            <button type="button" className="btn-primary sm" disabled={busy} onClick={() => remove(pendingDelete)}>{busy ? 'Deleting…' : 'Delete'}</button>
+            <button type="button" className="btn-ghost sm" disabled={busy} onClick={() => setPendingDelete(null)}>Keep</button>
+          </div>
+        </Modal>
+      )}
+      {view === 'list' ? (
+        <div className="table-wrap"><table className="stock-table list-table">
+          <thead><tr><th>Product</th><th>Price</th><th>Inventory</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {list.map(p => (
+              <ProductRow key={p.id} p={p}
+                onEdit={() => { setCreating(false); setEditing(p.id); setDraft({ ...p }); }}
+                onDelete={() => setPendingDelete(p)}
+                onStock={d => quickStock(p, d)} />
+            ))}
+          </tbody>
+        </table></div>
+      ) : (
+        <div className="inv-cards">
           {list.map(p => (
-            <ProductRow key={p.id} p={p}
+            <ProductCard key={p.id} p={p}
               onEdit={() => { setCreating(false); setEditing(p.id); setDraft({ ...p }); }}
-              onHide={() => hide(p.id)}
+              onDelete={() => setPendingDelete(p)}
               onStock={d => quickStock(p, d)} />
           ))}
-        </tbody>
-      </table></div>
+        </div>
+      )}
     </Card>
   );
 }
 
-function ProductRow({ p, onEdit, onHide, onStock }: {
-  p: ProductFull; onEdit: () => void; onHide: () => void; onStock: (d: number) => void;
+function ProductCard({ p, onEdit, onDelete, onStock }: {
+  p: ProductFull; onEdit: () => void; onDelete: () => void; onStock: (d: number) => void;
+}) {
+  return (
+    <article className={p.stock <= 5 ? 'inv-card warn' : 'inv-card'}>
+      <img src={productImage(p.image)} alt="" />
+      <div className="inv-card-body">
+        <strong>{p.name}</strong>
+        <small className="muted">{p.category}</small>
+        <p>{money(p.price)}</p>
+        <span className="stock-ctl">
+          <button className="mini" aria-label="Decrease inventory" onClick={() => onStock(-1)}>−</button>
+          <strong>{p.stock}</strong>
+          <button className="mini" aria-label="Increase inventory" onClick={() => onStock(1)}>+</button>
+        </span>
+        <div className="inv-card-foot">
+          <span>{p.active ? <span className="pill st-delivered">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? ' ★' : ''}</span>
+          <span>
+            <button className="icon-btn" aria-label={`Edit ${p.name}`} onClick={onEdit}><Pencil size={14} /></button>
+            <button className="icon-btn danger" aria-label={`Delete ${p.name}`} onClick={onDelete}><Trash2 size={14} /></button>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProductRow({ p, onEdit, onDelete, onStock }: {
+  p: ProductFull; onEdit: () => void; onDelete: () => void; onStock: (d: number) => void;
 }) {
   return (
     <tr className={p.stock <= 5 ? 'warn' : ''}>
@@ -612,7 +675,7 @@ function ProductRow({ p, onEdit, onHide, onStock }: {
       <td data-label="Status">{p.active ? <span className="pill st-delivered">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? ' ★' : ''}</td>
       <td className="actions">
         <button className="icon-btn" aria-label={`Edit ${p.name}`} onClick={onEdit}><Pencil size={14} /></button>
-        <button className="icon-btn danger" aria-label={`Hide ${p.name}`} onClick={onHide}><Trash2 size={14} /></button>
+        <button className="icon-btn danger" aria-label={`Delete ${p.name}`} onClick={onDelete}><Trash2 size={14} /></button>
       </td>
     </tr>
   );

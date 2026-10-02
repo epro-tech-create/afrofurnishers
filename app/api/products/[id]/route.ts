@@ -1,7 +1,15 @@
+import { unlink } from 'fs/promises';
+import path from 'path';
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { saveProductPhoto } from '@/lib/save-product-photo';
+
+async function removeUploadedPhoto(image: string) {
+  const match = image.match(/^\/uploads\/products\/([a-z0-9-]+\.jpg)/);
+  if (!match) return;
+  await unlink(path.join(process.cwd(), 'public', 'uploads', 'products', match[1])).catch(() => {});
+}
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,8 +54,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const db = await readDB();
   const i = db.products.findIndex(p => p.id === id);
   if (i < 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  // Soft-delete so past orders keep their history; hard-delete only via active=false + remove
-  db.products[i] = { ...db.products[i], active: false, updatedAt: new Date().toISOString() };
+  const [removed] = db.products.splice(i, 1);
+  await removeUploadedPhoto(removed.image);
   await writeDB(db);
   return NextResponse.json({ ok: true });
 }
