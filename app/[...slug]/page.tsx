@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   if (page === 'article') return { title: arg === 'table' ? 'Make space for a longer conversation' : 'A warmer way to come home', description: 'AfroFurnishers ideas.' };
   const title = page ? page.charAt(0).toUpperCase() + page.slice(1) : 'Home';
-  return { title, description: `${title}: AfroFurnishers quality furniture for sale in Dar es Salaam, Tanzania. Order online with M-Pesa or Cash on Delivery.` };
+  return { title, description: `${title}: AfroFurnishers quality furniture for sale in Dar es Salaam, Tanzania. Order online and pay cash on delivery.` };
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {

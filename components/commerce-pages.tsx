@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Minus, Plus, Trash2, Truck, Smartphone, Banknote, PackageSearch, RotateCcw, ShoppingBag, CheckCircle2, Phone, MapPin, ClipboardList, BadgeCheck, Package, Home, Check } from 'lucide-react';
+import { Minus, Plus, Trash2, Truck, Banknote, PackageSearch, RotateCcw, ShoppingBag, CheckCircle2, Phone, MapPin, ClipboardList, BadgeCheck, Package, Home, Check } from 'lucide-react';
 import { money } from '@/lib/catalog';
 import { DELIVERY_FEES, type Order } from '@/lib/shop-types';
 import { AccountAuth } from './account-auth';
@@ -111,14 +111,12 @@ export function WishlistPage() {
 
 const AREAS = Object.keys(DELIVERY_FEES);
 
-const CHECKOUT_STEPS = ['Bag', 'Details', 'Payment', 'Review'] as const;
-
-const digits = (s: string) => (s || '').replace(/\D/g, '');
+const CHECKOUT_STEPS = ['Bag', 'Details', 'Review'] as const;
 
 export function CheckoutPage() {
   const { cart, change, remove, subtotal, productById, clear, customer, customerReady } = useStore();
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', area: 'Kinondoni', notes: '', payment: 'mpesa' as 'mpesa' | 'cod', mpesaPhone: '' });
+  const [form, setForm] = useState({ name: '', phone: '', address: '', area: 'Kinondoni', notes: '' });
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<Order | null>(null);
@@ -129,7 +127,7 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (!customer) return;
-    setForm(f => ({ ...f, name: customer.name, phone: customer.phone, mpesaPhone: f.mpesaPhone || customer.phone }));
+    setForm(f => ({ ...f, name: customer.name, phone: customer.phone }));
   }, [customer]);
 
   useEffect(() => {
@@ -148,9 +146,6 @@ export function CheckoutPage() {
   const detailsError = !form.address.trim()
     ? 'Please enter your delivery address.'
     : '';
-  const paymentError = form.payment === 'mpesa' && digits(form.mpesaPhone || form.phone).length < 9
-    ? 'Enter the M-Pesa phone number for the payment prompt.'
-    : '';
 
   function next() {
     setError('');
@@ -162,11 +157,7 @@ export function CheckoutPage() {
       setError(detailsError);
       return;
     }
-    if (step === 2 && paymentError) {
-      setError(paymentError);
-      return;
-    }
-    setStep(s => Math.min(3, s + 1));
+    setStep(s => Math.min(2, s + 1));
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -180,8 +171,7 @@ export function CheckoutPage() {
         body: JSON.stringify({
           items: lines.map(({ p, qty }) => ({ productId: p!.id, qty })),
           customer: { name: form.name, phone: form.phone, address: form.address, area: form.area, notes: form.notes },
-          payment: form.payment,
-          mpesaPhone: form.payment === 'mpesa' ? form.mpesaPhone || form.phone : undefined,
+          payment: 'cod',
         }),
       });
       const data = await res.json();
@@ -218,7 +208,7 @@ export function CheckoutPage() {
           <p className="receipt-row"><span>Delivery to {done.customer.area}</span><strong>{money(done.deliveryFee)}</strong></p>
           <p className="receipt-row total"><span>Total</span><strong>{money(done.total)}</strong></p>
           <p className="receipt-meta">
-            {done.payment === 'mpesa' ? <><Smartphone size={15} /> M-Pesa prompt to {done.mpesaPhone}</> : <><Banknote size={15} /> Pay cash when it arrives</>}
+            <Banknote size={15} /> Pay cash when it arrives
             <br />
             <Phone size={15} /> We will call {done.customer.phone} to confirm.
             <br />
@@ -273,8 +263,8 @@ export function CheckoutPage() {
 
   return (
     <section className="page checkout-page">
-      <p className="eyebrow">CHECKOUT · STEP {step + 1} OF 4</p>
-      <h1>{['Review your bag.', 'Where should it go?', 'How will you pay?', 'Confirm your order.'][step]}</h1>
+      <p className="eyebrow">CHECKOUT · STEP {step + 1} OF 3</p>
+      <h1>{['Review your bag.', 'Where should it go?', 'Confirm your order.'][step]}</h1>
 
       <ol className="steps checkout-progress" aria-label="Checkout progress">
         {CHECKOUT_STEPS.map((s, i) => (
@@ -327,25 +317,6 @@ export function CheckoutPage() {
           )}
 
           {step === 2 && (
-            <>
-              <div className="pay-options" role="radiogroup" aria-label="Payment method">
-                <label className={`pay-card ${form.payment === 'mpesa' ? 'active' : ''}`}>
-                  <input type="radio" name="payment" checked={form.payment === 'mpesa'} onChange={() => setForm({ ...form, payment: 'mpesa' })} />
-                  <Smartphone size={20} /><div><strong>M-Pesa</strong><small>Payment prompt sent to your phone after ordering</small></div>
-                </label>
-                <label className={`pay-card ${form.payment === 'cod' ? 'active' : ''}`}>
-                  <input type="radio" name="payment" checked={form.payment === 'cod'} onChange={() => setForm({ ...form, payment: 'cod' })} />
-                  <Banknote size={20} /><div><strong>Cash on Delivery</strong><small>Pay in cash when furniture arrives</small></div>
-                </label>
-              </div>
-              {form.payment === 'mpesa' && (
-                <label>M-Pesa phone (if different from {form.phone || 'your number'})<input value={form.mpesaPhone} onChange={e => setForm({ ...form, mpesaPhone: e.target.value })} maxLength={20} placeholder="Defaults to your phone" inputMode="tel" /></label>
-              )}
-              <p className="note">You pay <strong>{money(total)}</strong> {form.payment === 'mpesa' ? 'via M-Pesa prompt' : 'in cash on delivery'}. No card needed.</p>
-            </>
-          )}
-
-          {step === 3 && (
             <div className="confirm-sheet">
               <div>
                 <p className="eyebrow">Deliver to</p>
@@ -357,8 +328,8 @@ export function CheckoutPage() {
               </div>
               <div>
                 <p className="eyebrow">Pay with</p>
-                <p className="confirm-name">{form.payment === 'mpesa' ? 'M-Pesa' : 'Cash on delivery'}</p>
-                <p className="muted">{form.payment === 'mpesa' ? `We send the prompt to ${form.mpesaPhone || form.phone}.` : 'Pay in cash when the furniture arrives.'}</p>
+                <p className="confirm-name">Cash on delivery</p>
+                <p className="muted">Pay in cash when the furniture arrives.</p>
               </div>
             </div>
           )}
@@ -367,7 +338,7 @@ export function CheckoutPage() {
 
           <div className="buttons wizard-nav">
             {step > 0 && <button type="button" className="button button-outline" onClick={() => { setError(''); setStep(s => s - 1); }}>← Back</button>}
-            {step < 3 && <button type="button" className="button" onClick={next}>Continue →</button>}
+            {step < 2 && <button type="button" className="button" onClick={next}>Continue →</button>}
           </div>
           <p className="muted">Need help? Call us on <a className="text-link" href="tel:+255692009222">+255 692 009 222</a>.</p>
         </div>
@@ -378,7 +349,7 @@ export function CheckoutPage() {
           <p><span><Truck size={14} /> Subtotal</span><strong>{money(subtotal)}</strong></p>
           <p><span>Delivery · {form.area}</span><strong>{money(fee)}</strong></p>
           <p className="grand"><span>Total</span><strong>{money(total)}</strong></p>
-          {step === 3 && (
+          {step === 2 && (
             <button type="button" className="button" disabled={placing} onClick={place}>
               {placing ? 'Placing order…' : `Place order · ${money(total)}`}
             </button>
@@ -505,7 +476,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
           <div className="track-card-head">
             <div>
               <p className="order-id-chip">{order.id}</p>
-              <p className="muted">{order.payment === 'mpesa' ? 'M-Pesa' : 'Cash on delivery'} · {new Date(order.createdAt).toLocaleString()}</p>
+              <p className="muted">Cash on delivery · {new Date(order.createdAt).toLocaleString()}</p>
             </div>
             <span className={`pill ${ORDER_PILL[order.status] || ''}`}>{order.status === 'cancelled' ? 'Cancelled' : STEP_LABEL[order.status as (typeof STATUS_STEPS)[number]] || order.status}</span>
           </div>
@@ -639,7 +610,7 @@ export function OrdersDashboardPage() {
                 <div className="order-head">
                   <div>
                     <strong>{o.id}</strong>
-                    <small className="muted"> · {new Date(o.createdAt).toLocaleDateString()} · {o.payment === 'mpesa' ? 'M-Pesa' : 'Cash'}</small>
+                    <small className="muted"> · {new Date(o.createdAt).toLocaleDateString()} · Cash</small>
                   </div>
                   <span className={`pill ${ORDER_PILL[o.status] || ''}`}>{o.status === 'cancelled' ? 'Cancelled' : STEP_LABEL[o.status as (typeof STATUS_STEPS)[number]] || o.status}</span>
                 </div>
@@ -653,7 +624,7 @@ export function OrdersDashboardPage() {
                 {open === o.id && (
                   <div className="review-card">
                     <p className="muted">{o.customer.name} · {o.customer.phone}<br />{o.customer.address}, {o.customer.area}</p>
-                    <p className="muted">Payment: {o.paymentStatus} · Updated {new Date(o.updatedAt).toLocaleString()}</p>
+                    <p className="muted">Payment: {o.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'} · Updated {new Date(o.updatedAt).toLocaleString()}</p>
                   </div>
                 )}
                 <div className="buttons order-foot">

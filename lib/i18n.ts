@@ -2,7 +2,7 @@ export type Theme = 'light' | 'dark';
 
 export const t = {
   annLeft: 'Quality furniture · Dar es Salaam',
-  annRight: 'M-Pesa & Cash on Delivery',
+  annRight: 'Cash on Delivery',
   nav: [
     ['/', 'Home'],
     ['/shop', 'Shop'],
@@ -26,7 +26,7 @@ export const t = {
   promise: ['Homes & institutions', 'Hospitals & schools', 'Commercial offices', 'Honest pricing'],
   servicesEyebrow: 'WHAT WE SELL',
   servicesTitle: 'Furniture for every room.',
-  servicesLead: 'Browse the collection and check out online. Pay with M-Pesa or Cash on Delivery.',
+  servicesLead: 'Browse the collection and check out online. Pay cash when the furniture is delivered.',
   services: [
     { title: 'Homes & residences', text: 'Sofas, seats and tables that make everyday living comfortable.' },
     { title: 'Offices & commercial', text: 'Desks, meeting rooms and seating for professional workplaces.' },
@@ -75,18 +75,18 @@ export const t = {
   ],
   ctaEyebrow: 'NEXT STEP',
   ctaTitle: 'Furnishing a home or organisation?',
-  ctaLead: 'Check out online in minutes. Pay with M-Pesa or Cash on Delivery.',
+  ctaLead: 'Check out online in minutes. Pay cash when the furniture arrives.',
   ctaButton: 'Order now',
   footerExplore: 'EXPLORE',
   footerInfo: 'INFO',
-  footerLead: 'Quality furniture for homes and organisations in Dar es Salaam. Order online with M-Pesa or Cash.',
+  footerLead: 'Quality furniture for homes and organisations in Dar es Salaam. Order online and pay cash on delivery.',
   footerTalk: 'Order now',
   footerCopy: '© 2026 AfroFurnishers · Dar es Salaam, Tanzania',
   howEyebrow: 'HOW TO BUY',
   howTitle: 'A clear path to your furniture.',
   how: [
     { title: 'Browse the collection', text: 'Pick the room and pieces you like: sofas, tables, beds and more.' },
-    { title: 'Sign up to check out', text: 'Create an account with your name and phone, then add your address and pay with M-Pesa or cash.' },
+    { title: 'Sign up to check out', text: 'Create an account with your name and phone, then add your address. Pay cash when the furniture arrives.' },
     { title: 'Track your furniture', text: 'Sign in any time to follow the order from confirmation until it arrives.' },
   ],
   roomsEyebrow: 'SPACES',

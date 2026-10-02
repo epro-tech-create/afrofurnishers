@@ -135,7 +135,6 @@ tr.detail td { background: #faf3e6; }
 .st-cancelled { background: #fbe7e7; color: #a12323; border-color: #efa9a9; }
 .pay-paid { background: #e6f7e6; color: #1c7a1c; }
 .pay-unpaid { background: #fbe7e7; color: #a12323; }
-.pay-pending-mpesa { background: #fff4e0; color: #8a5a00; }
 .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .search { position: relative; display: flex; align-items: center; }
 .search svg { position: absolute; left: 11px; color: var(--ink-soft); }

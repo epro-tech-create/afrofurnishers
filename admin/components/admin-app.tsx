@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
   AlertTriangle, Banknote, Boxes, Download, Eye, LayoutDashboard, Lock, LogOut,
-  Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Smartphone, Trash2,
+  Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Trash2,
   TrendingUp, Users, Wallet,
 } from 'lucide-react';
 import { api, clearToken, getToken, setToken } from '@/lib/api';
@@ -265,7 +265,7 @@ function OrderRow({ o, open, toggle, patch }: { o: Order; open: boolean; toggle:
         <td><strong>{o.id}</strong><br /><small className="muted">{timeAgo(o.createdAt)}</small></td>
         <td>{o.customer.name}<br /><small className="muted">{o.customer.phone} · {o.customer.area}</small></td>
         <td>{o.items.reduce((s, i) => s + i.qty, 0)}</td>
-        <td><strong>{money(o.total)}</strong><br /><small className="muted">{o.payment === 'mpesa' ? 'M-Pesa' : 'Cash'}</small></td>
+        <td><strong>{money(o.total)}</strong><br /><small className="muted">Cash</small></td>
         <td><span className={`pill pay-${o.paymentStatus}`}>{o.paymentStatus}</span></td>
         <td><span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
         <td><button className="link" onClick={toggle}>{open ? 'Hide' : 'Manage'}</button></td>
@@ -275,7 +275,7 @@ function OrderRow({ o, open, toggle, patch }: { o: Order; open: boolean; toggle:
           <div className="order-detail">
             <div>
               {o.items.map(it => <p key={it.productId}>{it.name} × {it.qty} — <strong>{money(it.price * it.qty)}</strong></p>)}
-              <p className="muted">{o.customer.address}{o.customer.notes ? ` · ${o.customer.notes}` : ''}{o.mpesaPhone ? ` · M-Pesa: ${o.mpesaPhone}` : ''}</p>
+              <p className="muted">{o.customer.address}{o.customer.notes ? ` · ${o.customer.notes}` : ''}</p>
             </div>
             <div className="order-actions">
               <label>Status
@@ -286,7 +286,6 @@ function OrderRow({ o, open, toggle, patch }: { o: Order; open: boolean; toggle:
               <label>Payment
                 <select value={o.paymentStatus} disabled={busy} onChange={e => run({ paymentStatus: e.target.value })}>
                   <option value="unpaid">Unpaid</option>
-                  <option value="pending-mpesa">Pending M-Pesa</option>
                   <option value="paid">Paid</option>
                 </select>
               </label>
@@ -531,8 +530,7 @@ function Settings({ bump }: { bump: () => void }) {
         <p className="muted">Tip: for production, set <code>ADMIN_PASSWORD</code> on the shop server instead — it always takes precedence.</p>
       </Card>
       <Card title="Store & payments">
-        <p className="row"><span><Smartphone size={14} /> M-Pesa</span><strong>Manual confirm</strong></p>
-        <p className="row"><span><Banknote size={14} /> Cash on Delivery</span><strong>Enabled</strong></p>
+        <p className="row"><span><Banknote size={14} /> Cash on delivery</span><strong>Pay when it arrives</strong></p>
         <p className="row"><span><Wallet size={14} /> Delivery fees</span><strong>15k – 35k by area</strong></p>
         <button className="btn-ghost sm" onClick={backup}><Download size={14} /> Download backup (JSON)</button>
       </Card>

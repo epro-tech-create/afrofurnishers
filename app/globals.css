@@ -2141,7 +2141,6 @@ main { outline: none; }
 .pill-cancelled { background: #fff; color: #111; border-color: #111; }
 .pill-pay-paid { background: #111; color: #fff; border-color: #111; }
 .pill-pay-unpaid { background: #fff; color: #111; border-color: #111; }
-.pill-pay-pending-mpesa { background: #fff; color: #e4572e; border-color: #e4572e; }
 .detail-row td { background: var(--bg-soft); }
 .order-detail { display: grid; grid-template-columns: 1fr 280px; gap: 18px; }
 .order-actions { display: grid; gap: 10px; }

@@ -1,6 +1,6 @@
-export type PaymentMethod = 'mpesa' | 'cod';
+export type PaymentMethod = 'cod';
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'delivering' | 'delivered' | 'cancelled';
-export type PaymentStatus = 'unpaid' | 'pending-mpesa' | 'paid';
+export type PaymentStatus = 'unpaid' | 'paid';
 
 export interface ProductFull {
   id: string;
@@ -89,7 +89,6 @@ export interface Order {
   items: OrderItem[];
   customer: OrderCustomer;
   payment: PaymentMethod;
-  mpesaPhone?: string;
   subtotal: number;
   deliveryFee: number;
   total: number;

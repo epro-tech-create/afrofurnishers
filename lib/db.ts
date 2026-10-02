@@ -39,7 +39,7 @@ function seedOrders(): Order[] {
   const daysAgo = (n: number) => new Date(t.getTime() - n * 86400000).toISOString();
   return [
     {
-      id: 'AFR-1001', source: 'website', payment: 'mpesa', mpesaPhone: '0712000001',
+      id: 'AFR-1001', source: 'website', payment: 'cod',
       items: [{ productId: 'kariakoo', name: 'Kariakoo Accent Seat', price: 680000, qty: 1, image: 'sofa' }],
       customer: { name: 'Amina J.', phone: '0712000001', address: 'Mikocheni, Dar es Salaam', area: 'Kinondoni' },
       subtotal: 680000, deliveryFee: 15000, total: 695000,
@@ -53,14 +53,14 @@ function seedOrders(): Order[] {
       status: 'delivering', paymentStatus: 'unpaid', createdAt: daysAgo(2), updatedAt: daysAgo(1),
     },
     {
-      id: 'AFR-1003', source: 'whatsapp', payment: 'mpesa', mpesaPhone: '0712000003',
+      id: 'AFR-1003', source: 'whatsapp', payment: 'cod',
       items: [
         { productId: 'upanga-desk', name: 'Upanga Office Desk', price: 540000, qty: 4, image: 'dining' },
         { productId: 'ilala-waiting', name: 'Ilala Waiting Bench', price: 960000, qty: 2, image: 'sofa' },
       ],
       customer: { name: 'Grace M. (Office)', phone: '0712000003', address: 'Upanga, Dar es Salaam', area: 'Ilala', notes: 'Need invoice for office' },
       subtotal: 4080000, deliveryFee: 15000, total: 4095000,
-      status: 'confirmed', paymentStatus: 'pending-mpesa', createdAt: daysAgo(1), updatedAt: daysAgo(1),
+      status: 'confirmed', paymentStatus: 'unpaid', createdAt: daysAgo(1), updatedAt: daysAgo(1),
     },
   ];
 }

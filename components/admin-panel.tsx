@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
   AlertTriangle, Banknote, Boxes, Check, Download, Eye, FileDown, LayoutDashboard, Lock, LogOut,
-  MessageCircle, Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Smartphone, Trash2,
+  MessageCircle, Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Trash2,
   TrendingUp, Users, Wallet, X,
 } from 'lucide-react';
 import { adminApi } from '@/lib/admin-client';
@@ -30,8 +30,12 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 };
 const FLOW: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'];
 const PAY_LABEL: Record<PaymentStatus, string> = {
-  unpaid: 'Unpaid', 'pending-mpesa': 'Pending M-Pesa', paid: 'Paid',
+  unpaid: 'Unpaid', paid: 'Paid',
 };
+
+function shownPay(status: string): PaymentStatus {
+  return status === 'paid' ? 'paid' : 'unpaid';
+}
 const AREAS = Object.keys(DELIVERY_FEES);
 
 function prettyName(name: string) {
@@ -343,8 +347,8 @@ function OrderRow({ o, onOpen }: { o: Order; onOpen: () => void }) {
       <td className="lead" data-label="Order"><strong>{o.id}</strong><br /><small className="muted">{timeAgo(o.createdAt)}</small></td>
       <td data-label="Customer">{o.customer.name}<br /><small className="muted">{o.customer.phone} · {o.customer.area}</small></td>
       <td data-label="Items">{o.items.reduce((s, i) => s + i.qty, 0)}</td>
-      <td data-label="Total"><strong>{money(o.total)}</strong><br /><small className="muted">{o.payment === 'mpesa' ? 'M-Pesa' : 'Cash'}</small></td>
-      <td data-label="Pay"><span className={`pill pay-${o.paymentStatus}`}>{PAY_LABEL[o.paymentStatus]}</span></td>
+      <td data-label="Total"><strong>{money(o.total)}</strong><br /><small className="muted">Cash</small></td>
+      <td data-label="Pay"><span className={`pill pay-${shownPay(o.paymentStatus)}`}>{PAY_LABEL[shownPay(o.paymentStatus)]}</span></td>
       <td data-label="Status"><span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
       <td className="actions"><button className="link" onClick={onOpen}>Manage</button></td>
     </tr>
@@ -411,10 +415,9 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
           <p>{o.customer.address}</p>
           <p>{o.customer.area}</p>
           {o.customer.notes && <p className="muted">{o.customer.notes}</p>}
-          {o.mpesaPhone && <p>M-Pesa {o.mpesaPhone}</p>}
           <p className="muted">Updated {timeAgo(o.updatedAt)}</p>
           <label>Payment
-            <select value={o.paymentStatus} disabled={busy} onChange={e => run({ paymentStatus: e.target.value })}>
+            <select value={shownPay(o.paymentStatus)} disabled={busy} onChange={e => run({ paymentStatus: e.target.value })}>
               {(Object.keys(PAY_LABEL) as PaymentStatus[]).map(s => <option key={s} value={s}>{PAY_LABEL[s]}</option>)}
             </select>
           </label>
@@ -860,8 +863,7 @@ function Settings({ bump }: { bump: () => void }) {
         {locked && <p className="muted">This shop password is set on the server. Personal details above still save.</p>}
       </Card>
       <Card title="Store & payments">
-        <p className="row"><span><Smartphone size={14} /> M-Pesa</span><strong>Manual confirm</strong></p>
-        <p className="row"><span><Banknote size={14} /> Cash on Delivery</span><strong>Enabled</strong></p>
+        <p className="row"><span><Banknote size={14} /> Cash on delivery</span><strong>Pay when it arrives</strong></p>
         <p className="row"><span><Wallet size={14} /> Delivery fees</span><strong>15k – 35k by area</strong></p>
         <button className="btn-ghost sm" onClick={backup}><Download size={14} /> Download backup (JSON)</button>
       </Card>
@@ -885,8 +887,6 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
   const [address, setAddress] = useState('');
   const [area, setArea] = useState('Kinondoni');
   const [notes, setNotes] = useState('');
-  const [payment, setPayment] = useState<'mpesa' | 'cod'>('cod');
-  const [mpesaPhone, setMpesaPhone] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('unpaid');
   const [status, setStatus] = useState<OrderStatus>('confirmed');
   const [busy, setBusy] = useState(false);
@@ -957,8 +957,7 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
         body: JSON.stringify({
           items: items.map(l => ({ productId: l.productId, qty: l.qty })),
           customer: { name, phone, address, area, notes },
-          payment,
-          mpesaPhone: payment === 'mpesa' ? (mpesaPhone || phone) : undefined,
+          payment: 'cod',
           paymentStatus,
           status,
         }),
@@ -1002,7 +1001,7 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
                 <td data-label="Sale"><strong>{o.id}</strong><br /><small className="muted">{timeAgo(o.createdAt)} · {o.source === 'admin' ? 'Counter' : 'Website'}</small></td>
                 <td data-label="Pieces">{o.items.reduce((s, i) => s + i.qty, 0)} pcs<br /><small className="muted">{o.items[0] ? o.items[0].name : ''}{extra > 0 ? ` + ${extra} more` : ''}</small></td>
                 <td className="nowrap" data-label="Total"><strong>{money(o.total)}</strong></td>
-                <td data-label="Pay"><span className={`pill pay-${o.paymentStatus}`}>{o.paymentStatus === 'pending-mpesa' ? 'M-Pesa' : PAY_LABEL[o.paymentStatus]}</span></td>
+                <td data-label="Pay"><span className={`pill pay-${shownPay(o.paymentStatus)}`}>{PAY_LABEL[shownPay(o.paymentStatus)]}</span></td>
                 <td data-label="Status"><span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
                 <td className="actions"><button className="link" onClick={() => setManageId(o.id)}>Open</button></td>
               </tr>
@@ -1034,26 +1033,11 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
                   </select>
                 </label>
                 <label>Note<input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Invoice, floor, gate code" /></label>
-                <label>How they pay
-                  <select value={payment} onChange={e => {
-                    const next = e.target.value === 'cod' ? 'cod' : 'mpesa';
-                    setPayment(next);
-                    setPaymentStatus(next === 'mpesa' ? 'pending-mpesa' : 'unpaid');
-                  }}>
-                    <option value="cod">Cash</option>
-                    <option value="mpesa">M-Pesa</option>
-                  </select>
-                </label>
                 <label>Payment status
                   <select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value as PaymentStatus)}>
                     {(Object.keys(PAY_LABEL) as PaymentStatus[]).map(s => <option key={s} value={s}>{PAY_LABEL[s]}</option>)}
                   </select>
                 </label>
-                {payment === 'mpesa' && (
-                  <label className="full">M-Pesa number
-                    <input value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)} placeholder={phone || 'Same as the customer phone'} />
-                  </label>
-                )}
                 <label className="full">Start the customer’s progress at
                   <select value={status} onChange={e => setStatus(e.target.value as OrderStatus)}>
                     {FLOW.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}

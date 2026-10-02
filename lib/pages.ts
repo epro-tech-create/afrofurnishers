@@ -23,7 +23,7 @@ export const pages: Record<string, string[]> = {
     'DELIVERY',
     'Delivery across Tanzania.',
     'Delivery fees depend on your area and are shown at checkout, starting from TZS 15,000 in Dar es Salaam.',
-    'Pay with M-Pesa or cash on delivery. Sign in to track the order until it arrives.',
+    'Pay cash when the furniture arrives. Sign in to track the order until it is delivered.',
   ],
   privacy: [
     'PRIVACY',

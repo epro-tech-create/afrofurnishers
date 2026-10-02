@@ -60,7 +60,7 @@ export function ProductDetail({ product: p, compact = false }: { product: Produc
             <Heart size={17} fill={wished ? 'currentColor' : 'none'} />
           </button>
         </div>
-        <p className="note">Pay with M-Pesa or cash. Sign in at checkout to track your order across Dar es Salaam and Tanzania.</p>
+        <p className="note">Pay cash when it arrives. Sign in at checkout to track your order across Dar es Salaam and Tanzania.</p>
         {compact ? <div className="buttons buy-alt"><Link href={`/product/${p.id}`} className="text-link">{t.details} →</Link></div> : null}
         <details>
           <summary>Materials & size</summary>
@@ -193,7 +193,7 @@ export function Shop({ initialCategory = 'All' }: { initialCategory?: string }) 
     <section className="page">
       <p className="eyebrow">{t.workEyebrow}</p>
       <h1>{t.workTitle}</h1>
-      <p>{t.workLead} Pay with M-Pesa or Cash on Delivery.</p>
+      <p>{t.workLead} Pay cash when the furniture is delivered.</p>
       <div className="filterbar">
         <input id="search" type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search sofas, beds, desks…" aria-label="Search" />
         <select aria-label="Filter by room" value={category} onChange={e => setCategory(e.target.value)}>

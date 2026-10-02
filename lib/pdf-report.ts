@@ -210,7 +210,7 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
       if (index % 2 === 0) fill(LEFT, bottom, RIGHT - LEFT, 22, PAPER);
       const y = bottom + 7;
       const pieces = order.items.map(item => `${item.name} x${item.qty}`).join(', ');
-      const pay = order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus === 'pending-mpesa' ? 'M-Pesa' : 'Unpaid';
+      const pay = order.paymentStatus === 'paid' ? 'Paid' : 'Unpaid';
       text(when(order.createdAt), LEFT + 8, y, 8, false, BLACK);
       text(order.id, 118, y, 8, true, BLACK);
       text(clip(order.customer.name, 24), 190, y, 8, false, BLACK);

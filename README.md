@@ -1,8 +1,8 @@
-﻿# AfroFurnishers
+# AfroFurnishers
 
 AfroFurnishers is a furniture shop in Dar es Salaam. This website is the shop: you can look through the pieces, create an account, pay, and follow the order until the furniture arrives.
 
-Prices are in Tanzanian shillings. You can pay with M-Pesa or with cash when the furniture is delivered.
+Prices are in Tanzanian shillings. You pay cash when the furniture is delivered.
 
 ## For someone buying furniture
 
@@ -12,7 +12,7 @@ You do not need an account to browse. You do need one to check out, so the order
 2. Add it to your bag. You can also save pieces to a wishlist.
 3. Create an account with your name and phone number, or sign in if you already have one.
 4. At checkout, give the delivery address and area. The delivery fee is added before you confirm.
-5. Choose M-Pesa or cash on delivery.
+5. Confirm the order. You pay cash when the furniture arrives.
 6. After you place the order you get a number such as `AFR-1004`. Keep it. The same number is on your account.
 
 ### Where an order goes

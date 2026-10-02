@@ -38,9 +38,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         if (p) p.stock += item.qty;
       }
     }
-    if (body.status === 'delivered' && order.payment === 'cod') order.paymentStatus = 'paid';
+    if (body.status === 'delivered') order.paymentStatus = 'paid';
   }
-  if (body.paymentStatus && ['unpaid', 'pending-mpesa', 'paid'].includes(body.paymentStatus as PaymentStatus)) {
+  if (body.paymentStatus && ['unpaid', 'paid'].includes(body.paymentStatus as PaymentStatus)) {
     order.paymentStatus = body.paymentStatus;
   }
   order.updatedAt = new Date().toISOString();

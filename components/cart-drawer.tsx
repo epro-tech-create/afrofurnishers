@@ -68,7 +68,7 @@ export function CartDrawer() {
             {lines.length > 0 && (
               <div className="cart-drawer-foot">
                 <p className="cart-total-line"><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
-                <p className="muted">Sign in at checkout to track delivery · Pay with M-Pesa or Cash.</p>
+                <p className="muted">Sign in at checkout to track delivery · Pay cash when it arrives.</p>
                 <Link className="button" href="/checkout" onClick={() => setCartOpen(false)}>Checkout →</Link>
                 <Link className="text-link" href="/cart" onClick={() => setCartOpen(false)}>View bag</Link>
               </div>

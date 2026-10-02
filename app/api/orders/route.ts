@@ -33,7 +33,6 @@ export async function POST(req: Request) {
 
   const itemsIn = Array.isArray(body.items) ? body.items : [];
   const customer = body.customer || {};
-  const payment = body.payment === 'cod' ? 'cod' : 'mpesa';
   const name = admin ? String(customer.name || '').trim() : account!.name;
   const phone = admin ? String(customer.phone || '').trim() : account!.phone;
 
@@ -41,9 +40,6 @@ export async function POST(req: Request) {
   if (admin && name.length < 2) return NextResponse.json({ error: 'Customer name is required' }, { status: 400 });
   if (admin && digits(phone).length < 9) return NextResponse.json({ error: 'A valid customer phone is required' }, { status: 400 });
   if (!String(customer.address || '').trim()) return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 });
-  if (payment === 'mpesa' && digits(String(body.mpesaPhone || phone || '')).length < 9) {
-    return NextResponse.json({ error: 'M-Pesa phone number is required' }, { status: 400 });
-  }
 
   const db = await readDB();
   const items: OrderItem[] = [];
@@ -63,9 +59,7 @@ export async function POST(req: Request) {
   const t = new Date().toISOString();
 
   const linked = admin ? await findCustomerByPhone(phone) : null;
-  const payStatus = admin && ['unpaid', 'pending-mpesa', 'paid'].includes(body.paymentStatus)
-    ? body.paymentStatus
-    : payment === 'mpesa' ? 'pending-mpesa' : 'unpaid';
+  const payStatus = admin && body.paymentStatus === 'paid' ? 'paid' : 'unpaid';
   const status = admin && ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'].includes(body.status)
     ? body.status
     : 'pending';
@@ -81,8 +75,7 @@ export async function POST(req: Request) {
       area,
       notes: customer.notes ? String(customer.notes).slice(0, 500) : undefined,
     },
-    payment,
-    mpesaPhone: payment === 'mpesa' ? String(body.mpesaPhone || phone).trim() : undefined,
+    payment: 'cod',
     subtotal,
     deliveryFee,
     total,

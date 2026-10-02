@@ -30,13 +30,12 @@ export interface Order {
   id: string;
   items: OrderItem[];
   customer: { name: string; phone: string; address: string; area: string; notes?: string };
-  payment: 'mpesa' | 'cod';
-  mpesaPhone?: string;
+  payment: 'cod';
   subtotal: number;
   deliveryFee: number;
   total: number;
   status: OrderStatus;
-  paymentStatus: 'unpaid' | 'pending-mpesa' | 'paid';
+  paymentStatus: 'unpaid' | 'paid';
   source: string;
   createdAt: string;
   updatedAt: string;
