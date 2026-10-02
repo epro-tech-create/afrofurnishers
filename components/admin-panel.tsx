@@ -527,7 +527,7 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
           {form(draft, setDraft, editing)}
         </Modal>
       )}
-      <div className="table-wrap"><table className="list-table">
+      <div className="table-wrap"><table className="stock-table list-table">
         <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {list.map(p => (
@@ -630,7 +630,7 @@ function Customers() {
   return (
     <Card wide title={`${rows.length} customers`} action={<button type="button" className="btn-primary sm" onClick={startNew}><Plus size={14} /> Add</button>}>
       {error && !open && <p className="error">{error}</p>}
-      <div className="table-wrap"><table className="list-table">
+      <div className="table-wrap"><table className="customers-table list-table">
         <thead><tr><th>Name</th><th>Phone</th><th>Area</th><th>Orders</th><th>Spent</th><th>Last order</th><th></th></tr></thead>
         <tbody>
           {rows.map(r => (
@@ -1223,7 +1223,7 @@ export function AdminApp() {
             </button>
           ))}
         </nav>
-        <button className="signout" onClick={logout}><LogOut size={16} /> Sign out</button>
+        <button className="signout" onClick={logout} aria-label="Sign out"><LogOut size={16} /> <span>Sign out</span></button>
       </aside>
       <main>
         <header className="top">
