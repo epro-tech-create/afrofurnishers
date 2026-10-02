@@ -44,6 +44,38 @@ export interface CustomerAccount {
   createdAt: string;
 }
 
+/** A person the workshop keeps on the customer list. Orders are matched by phone. */
+export interface ShopContact {
+  id: string;
+  name: string;
+  phone: string;
+  area: string;
+  address: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerListItem {
+  id: string;
+  name: string;
+  phone: string;
+  area: string;
+  address: string;
+  notes: string;
+  orders: number;
+  spent: number;
+  lastOrder: string;
+}
+
+export interface AdminProfile {
+  name: string;
+  phone: string;
+  role: string;
+  email: string;
+  photo: string;
+}
+
 /** Safe to send to the browser. Never includes the password hash. */
 export interface PublicCustomer {
   id: string;

@@ -1,4 +1,31 @@
-import type { Order, ProductFull } from '@/lib/shop-types';
+import type { Order, OrderStatus, ProductFull } from '@/lib/shop-types';
+
+type RGB = [number, number, number];
+
+const ORANGE: RGB = [228 / 255, 87 / 255, 46 / 255];
+const BLACK: RGB = [0.067, 0.067, 0.067];
+const WHITE: RGB = [1, 1, 1];
+const SOFT: RGB = [0.27, 0.27, 0.27];
+const PAPER: RGB = [0.965, 0.965, 0.965];
+const LINE: RGB = [0.9, 0.9, 0.9];
+
+const PAGE_W = 842;
+const PAGE_H = 595;
+const LEFT = 36;
+const RIGHT = PAGE_W - 36;
+
+const STATUS: Record<OrderStatus, string> = {
+  pending: 'Order placed',
+  confirmed: 'Confirmed',
+  preparing: 'Preparing',
+  delivering: 'On the way',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
+
+type Cmd =
+  | { t: 'fill'; x: number; y: number; w: number; h: number; c: RGB }
+  | { t: 'text'; x: number; y: number; size: number; bold: boolean; c: RGB; text: string };
 
 function pdfEscape(text: string): string {
   let out = '';
@@ -16,26 +43,33 @@ function clip(text: string, max: number): string {
   return clean.length <= max ? clean : `${clean.slice(0, Math.max(0, max - 3))}...`;
 }
 
+function num(n: number): string {
+  return Math.round(n).toLocaleString('en-US');
+}
+
 function tzs(n: number): string {
   return `TZS ${num(n)}`;
 }
 
-function num(n: number): string {
-  return Math.round(n).toLocaleString('en-US');
+function width(text: string, size: number, bold: boolean): number {
+  return text.length * size * (bold ? 0.52 : 0.5);
 }
 
 function when(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-type Draw = { text: string; x: number; y: number; size: number; bold: boolean };
-
-function buildPdf(pages: Draw[][]): Uint8Array {
-  const streams = pages.map(draws => draws.map(d =>
-    `BT /${d.bold ? 'F2' : 'F1'} ${d.size} Tf ${d.x.toFixed(1)} ${d.y.toFixed(1)} Td (${pdfEscape(d.text)}) Tj ET`,
-  ).join('\n'));
+function buildPdf(pages: Cmd[][]): Uint8Array {
+  const streams = pages.map(cmds => cmds.map(cmd => {
+    const [r, g, b] = cmd.c;
+    const color = `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg`;
+    if (cmd.t === 'fill') {
+      return `${color} ${cmd.x.toFixed(1)} ${cmd.y.toFixed(1)} ${cmd.w.toFixed(1)} ${cmd.h.toFixed(1)} re f`;
+    }
+    return `${color} BT /${cmd.bold ? 'F2' : 'F1'} ${cmd.size} Tf ${cmd.x.toFixed(1)} ${cmd.y.toFixed(1)} Td (${pdfEscape(cmd.text)}) Tj ET`;
+  }).join('\n'));
 
   const objects: string[] = [];
   objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
@@ -48,7 +82,7 @@ function buildPdf(pages: Draw[][]): Uint8Array {
     const contentId = next++;
     const pageId = next++;
     objects[contentId] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
-    objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`;
+    objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentId} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`;
     kids.push(pageId);
   }
   objects[2] = `<< /Type /Pages /Kids [${kids.map(id => `${id} 0 R`).join(' ')}] /Count ${kids.length} >>`;
@@ -69,100 +103,189 @@ function buildPdf(pages: Draw[][]): Uint8Array {
 }
 
 export function downloadShopReport(orders: Order[], products: ProductFull[], kind: 'sales' | 'stock' | 'full' = 'full') {
-  const pages: Draw[][] = [[]];
-  let y = 800;
+  const titles = { sales: 'Sales report', stock: 'Stock report', full: 'Shop report' } as const;
   const stamp = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const pages: Cmd[][] = [];
+  let page: Cmd[] = [];
+  let top = 520;
 
-  function page() { return pages[pages.length - 1]; }
+  function text(value: string, x: number, y: number, size: number, bold: boolean, color: RGB) {
+    page.push({ t: 'text', text: value, x, y, size, bold, c: color });
+  }
+  function right(value: string, edge: number, y: number, size: number, bold: boolean, color: RGB) {
+    text(value, edge - width(value, size, bold), y, size, bold, color);
+  }
+  function fill(x: number, y: number, w: number, h: number, c: RGB) {
+    page.push({ t: 'fill', x, y, w, h, c });
+  }
   function header() {
-    page().push({ text: 'AfroFurnishers', x: 40, y: 812, size: 16, bold: true });
-    const titles = { sales: 'Sales report', stock: 'Stock report', full: 'Shop report' } as const;
-    page().push({ text: titles[kind], x: 40, y: 794, size: 10, bold: false });
-    page().push({ text: stamp, x: 430, y: 812, size: 9, bold: false });
-    y = 768;
+    fill(0, PAGE_H - 64, PAGE_W, 64, ORANGE);
+    text('AFROFURNISHERS', LEFT, PAGE_H - 30, 16, true, WHITE);
+    text('Dar es Salaam  ·  Made for the home', LEFT, PAGE_H - 48, 9, false, WHITE);
+    right(titles[kind].toUpperCase(), RIGHT, PAGE_H - 28, 12, true, WHITE);
+    right(stamp, RIGHT, PAGE_H - 46, 9, false, WHITE);
   }
-  function nextPage() {
-    pages.push([]);
+  function footer(index: number, total: number) {
+    fill(LEFT, 28, RIGHT - LEFT, 1, LINE);
+    page.push({ t: 'text', text: 'AfroFurnishers  ·  +255 692 009 222  ·  Workshop copy', x: LEFT, y: 14, size: 8, bold: false, c: SOFT });
+    const label = `Page ${index} of ${total}`;
+    page.push({ t: 'text', text: label, x: RIGHT - width(label, 8, false), y: 14, size: 8, bold: false, c: SOFT });
+  }
+  function fresh(start: number) {
+    page = [];
+    pages.push(page);
     header();
+    top = start;
   }
-  function need(h: number) {
-    if (y - h < 46) nextPage();
-  }
-  function text(value: string, x: number, size: number, bold = false, gap = 5) {
-    need(size + gap);
-    page().push({ text: value, x, y, size, bold });
-    y -= size + gap;
-  }
-  function cols(cells: { text: string; x: number }[], size: number, bold = false) {
-    need(size + 6);
-    for (const cell of cells) page().push({ text: cell.text, x: cell.x, y, size, bold });
-    y -= size + 6;
+  function need(height: number, afterBreak: () => void) {
+    if (top - height < 46) {
+      fresh(500);
+      afterBreak();
+    }
   }
 
-  header();
   const live = orders.filter(o => o.status !== 'cancelled');
   const revenue = live.reduce((s, o) => s + o.total, 0);
   const paid = live.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + o.total, 0);
+  const due = revenue - paid;
   const units = products.filter(p => p.active).reduce((s, p) => s + p.stock, 0);
   const stockValue = products.filter(p => p.active).reduce((s, p) => s + p.stock * p.price, 0);
+  const low = products.filter(p => p.active && p.stock <= 5).length;
 
+  fresh(PAGE_H - 84);
+
+  const cards: { label: string; value: string }[] = [];
   if (kind !== 'stock') {
-  text(`Sales ${orders.length}    Revenue ${tzs(revenue)}    Paid ${tzs(paid)}`, 40, 10, true, 8);
+    cards.push(
+      { label: 'Sales', value: String(orders.length) },
+      { label: 'Revenue', value: tzs(revenue) },
+      { label: 'Collected', value: tzs(paid) },
+      { label: 'Still to collect', value: tzs(due) },
+    );
+  } else {
+    cards.push(
+      { label: 'Pieces on hand', value: String(units) },
+      { label: 'Stock value', value: tzs(stockValue) },
+      { label: 'Low stock', value: String(low) },
+      { label: 'Catalogue', value: String(products.filter(p => p.active).length) },
+    );
   }
-  if (kind !== 'sales') {
-  text(`Stock on hand ${units} units    Stock value ${tzs(stockValue)}`, 40, 10, false, 14);
+  const gap = 10;
+  const boxW = (RIGHT - LEFT - gap * (cards.length - 1)) / cards.length;
+  cards.forEach((card, i) => {
+    const x = LEFT + i * (boxW + gap);
+    const bottom = top - 58;
+    fill(x, bottom, boxW, 58, PAPER);
+    fill(x, bottom, 4, 58, i % 2 === 0 ? ORANGE : BLACK);
+    text(card.label.toUpperCase(), x + 14, bottom + 36, 8, true, SOFT);
+    text(card.value, x + 14, bottom + 16, 12, true, BLACK);
+  });
+  top -= 78;
+
+  function sectionTitle(label: string) {
+    need(28, () => {});
+    text(label, LEFT, top - 16, 13, true, BLACK);
+    top -= 28;
   }
 
-  if (kind !== 'stock') {
-    cols([
-      { text: 'Sale', x: 40 },
-      { text: 'Customer', x: 105 },
-      { text: 'Date', x: 230 },
-      { text: 'Pieces', x: 300 },
-      { text: 'Total TZS', x: 430 },
-      { text: 'Status', x: 510 },
-    ], 8, true);
-
+  function salesTable() {
+    const columns = () => {
+      fill(LEFT, top - 22, RIGHT - LEFT, 22, BLACK);
+      const y = top - 15;
+      text('DATE', LEFT + 8, y, 8, true, WHITE);
+      text('SALE', 118, y, 8, true, WHITE);
+      text('CUSTOMER', 190, y, 8, true, WHITE);
+      text('PIECES', 350, y, 8, true, WHITE);
+      right('AMOUNT', 640, y, 8, true, WHITE);
+      text('PAYMENT', 656, y, 8, true, WHITE);
+      text('STATUS', 720, y, 8, true, WHITE);
+      top -= 22;
+    };
+    sectionTitle('Sales');
+    columns();
     const sorted = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    for (const o of sorted) {
-      const pieces = o.items.map(i => `${i.name} x${i.qty}`).join(', ');
-      cols([
-        { text: o.id, x: 40 },
-        { text: clip(o.customer.name, 22), x: 105 },
-        { text: when(o.createdAt), x: 230 },
-        { text: clip(pieces, 24), x: 300 },
-        { text: num(o.total), x: 430 },
-        { text: o.status, x: 510 },
-      ], 8);
+    sorted.forEach((order, index) => {
+      need(24, columns);
+      const bottom = top - 22;
+      if (index % 2 === 0) fill(LEFT, bottom, RIGHT - LEFT, 22, PAPER);
+      const y = bottom + 7;
+      const pieces = order.items.map(item => `${item.name} x${item.qty}`).join(', ');
+      const pay = order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus === 'pending-mpesa' ? 'M-Pesa' : 'Unpaid';
+      text(when(order.createdAt), LEFT + 8, y, 8, false, BLACK);
+      text(order.id, 118, y, 8, true, BLACK);
+      text(clip(order.customer.name, 24), 190, y, 8, false, BLACK);
+      text(clip(pieces || '-', 32), 350, y, 8, false, BLACK);
+      right(num(order.total), 640, y, 8, true, BLACK);
+      text(pay, 656, y, 8, false, BLACK);
+      text(STATUS[order.status], 720, y, 8, false, order.status === 'cancelled' ? SOFT : BLACK);
+      top = bottom;
+    });
+    if (!sorted.length) {
+      text('No sales recorded yet.', LEFT, top - 16, 10, false, SOFT);
+      top -= 24;
+    } else {
+      need(26, () => {});
+      fill(LEFT, top - 24, RIGHT - LEFT, 24, BLACK);
+      text('TOTAL  ·  cancelled sales left out', LEFT + 8, top - 16, 9, true, WHITE);
+      right(tzs(revenue), 640, top - 16, 9, true, WHITE);
+      top -= 24;
     }
-    if (!sorted.length) text('No sales recorded yet.', 40, 10);
+    top -= 16;
   }
 
-  if (kind !== 'sales') {
-  y -= 8;
-  text('Stock', 40, 13, true, 10);
-  cols([
-    { text: 'Piece', x: 40 },
-    { text: 'Category', x: 230 },
-    { text: 'On hand', x: 360 },
-    { text: 'Price TZS', x: 400 },
-    { text: 'Value TZS', x: 490 },
-  ], 8, true);
-  const stock = [...products].filter(p => p.active).sort((a, b) => a.name.localeCompare(b.name));
-  for (const p of stock) {
-    cols([
-      { text: clip(p.name, 32), x: 40 },
-      { text: clip(p.category, 18), x: 230 },
-      { text: String(p.stock), x: 360 },
-      { text: num(p.price), x: 400 },
-      { text: num(p.stock * p.price), x: 490 },
-    ], 8);
-  }
-  if (!stock.length) text('No pieces in the catalogue.', 40, 10);
+  function stockTable() {
+    const columns = () => {
+      fill(LEFT, top - 22, RIGHT - LEFT, 22, BLACK);
+      const y = top - 15;
+      text('PIECE', LEFT + 8, y, 8, true, WHITE);
+      text('CATEGORY', 300, y, 8, true, WHITE);
+      text('ON HAND', 450, y, 8, true, WHITE);
+      right('UNIT PRICE', 620, y, 8, true, WHITE);
+      right('STOCK VALUE', 750, y, 8, true, WHITE);
+      text('NOTE', 766, y, 8, true, WHITE);
+      top -= 22;
+    };
+    sectionTitle('Stock on hand');
+    columns();
+    const stock = products.filter(p => p.active).sort((a, b) => a.name.localeCompare(b.name));
+    stock.forEach((product, index) => {
+      need(24, columns);
+      const bottom = top - 22;
+      if (index % 2 === 0) fill(LEFT, bottom, RIGHT - LEFT, 22, PAPER);
+      const y = bottom + 7;
+      const short = product.stock <= 5;
+      text(clip(product.name, 38), LEFT + 8, y, 8, false, BLACK);
+      text(clip(product.category, 18), 300, y, 8, false, BLACK);
+      text(String(product.stock), 450, y, 8, true, BLACK);
+      right(num(product.price), 620, y, 8, false, BLACK);
+      right(num(product.stock * product.price), 750, y, 8, true, BLACK);
+      if (short) text('LOW', 766, y, 8, true, ORANGE);
+      top = bottom;
+    });
+    if (!stock.length) {
+      text('No pieces in the catalogue.', LEFT, top - 16, 10, false, SOFT);
+      top -= 24;
+    } else {
+      need(26, () => {});
+      fill(LEFT, top - 24, RIGHT - LEFT, 24, BLACK);
+      text(`${units} units on hand${low ? `  ·  ${low} at 5 or below` : ''}`, LEFT + 8, top - 16, 9, true, WHITE);
+      right(tzs(stockValue), 750, top - 16, 9, true, WHITE);
+      top -= 24;
+    }
   }
 
-  const bytes = buildPdf(pages);
-  savePdf(bytes, kind);
+  if (kind !== 'stock') salesTable();
+  if (kind === 'full') {
+    if (top < 160) fresh(500);
+  }
+  if (kind !== 'sales') stockTable();
+
+  pages.forEach((cmds, index) => {
+    page = cmds;
+    footer(index + 1, pages.length);
+  });
+
+  savePdf(buildPdf(pages), kind);
 }
 
 function savePdf(bytes: Uint8Array, kind: string) {

@@ -1,14 +1,16 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
-import type { CustomerAccount, Order, ProductFull, Visit } from './shop-types';
+import type { AdminProfile, CustomerAccount, Order, ProductFull, ShopContact, Visit } from './shop-types';
 
-interface ShopDB {
+export interface ShopDB {
   products: ProductFull[];
   orders: Order[];
   visits: Visit[];
   customers: CustomerAccount[];
-  admin?: { passwordHash: string; updatedAt: string };
+  contacts: ShopContact[];
+  hiddenCustomerKeys: string[];
+  admin?: { passwordHash: string; updatedAt: string; profile?: AdminProfile };
 }
 
 const now = () => new Date().toISOString();
@@ -94,13 +96,15 @@ export async function readDB(): Promise<ShopDB> {
       if (Array.isArray(parsed.products) && Array.isArray(parsed.orders)) {
         if (!Array.isArray(parsed.visits)) parsed.visits = [];
         if (!Array.isArray(parsed.customers)) parsed.customers = [];
+        if (!Array.isArray(parsed.contacts)) parsed.contacts = [];
+        if (!Array.isArray(parsed.hiddenCustomerKeys)) parsed.hiddenCustomerKeys = [];
         cache = parsed;
         cachePath = p;
         return parsed;
       }
     } catch { /* try next */ }
   }
-  const seeded: ShopDB = { products: seedProducts(), orders: seedOrders(), visits: [], customers: [] };
+  const seeded: ShopDB = { products: seedProducts(), orders: seedOrders(), visits: [], customers: [], contacts: [], hiddenCustomerKeys: [] };
   cache = seeded;
   try {
     cachePath = await writablePath();

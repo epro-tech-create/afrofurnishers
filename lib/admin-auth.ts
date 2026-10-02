@@ -29,7 +29,7 @@ export async function getPasswordHash(): Promise<string> {
   const db = await readDB();
   if (db.admin?.passwordHash) return db.admin.passwordHash;
   const generated = randomBytes(12).toString('base64url');
-  db.admin = { passwordHash: hashPassword(generated), updatedAt: new Date().toISOString() };
+  db.admin = { passwordHash: hashPassword(generated), updatedAt: new Date().toISOString(), profile: db.admin?.profile };
   await writeDB(db);
   console.log(`\n[afro-admin] No ADMIN_PASSWORD set — generated one (shown once, stored in data/shop-db.json):\n[afro-admin]   ${generated}\n`);
   return db.admin.passwordHash;

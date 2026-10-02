@@ -3,22 +3,13 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import {
   AlertTriangle, Banknote, Boxes, Check, Download, Eye, FileDown, LayoutDashboard, Lock, LogOut,
-  Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Smartphone, Trash2,
+  MessageCircle, Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Smartphone, Trash2,
   TrendingUp, Users, Wallet, X,
 } from 'lucide-react';
 import { adminApi } from '@/lib/admin-client';
 import { money } from '@/lib/catalog';
 import { downloadShopReport } from '@/lib/pdf-report';
-import { DELIVERY_FEES, deliveryFeeFor, type DashboardStats, type Order, type OrderStatus, type PaymentStatus, type ProductFull } from '@/lib/shop-types';
-
-interface CustomerRow {
-  name: string;
-  phone: string;
-  area: string;
-  orders: number;
-  spent: number;
-  lastOrder: string;
-}
+import { DELIVERY_FEES, deliveryFeeFor, type AdminProfile, type CustomerListItem, type DashboardStats, type Order, type OrderStatus, type PaymentStatus, type ProductFull } from '@/lib/shop-types';
 
 function timeAgo(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -49,6 +40,12 @@ function prettyName(name: string) {
     return name.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
   }
   return name;
+}
+
+function waHref(phone: string, text: string) {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('0')) digits = `255${digits.slice(1)}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
 function Brand({ admin = false }: { admin?: boolean }) {
@@ -361,47 +358,55 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
     try { await patch(o, b); } finally { setBusy(false); }
   }
   const at = FLOW.indexOf(o.status);
+  const next = at >= 0 && at < FLOW.length - 1 ? FLOW[at + 1] : null;
   return (
     <Modal title={o.id} wide onClose={onClose}>
-      <p className="manage-kicker">The customer sees this same line{o.source === 'admin' ? ' · counter sale' : ' · website order'}</p>
+      <p className="manage-kicker">{o.source === 'admin' ? 'Counter sale' : 'Website order'} · the customer sees this same line</p>
       <div className="manage-layout">
+      <div className="step-col">
       <ol className="vstep" aria-label="Order progress">
         {FLOW.map((s, i) => {
           const state = at < 0 ? '' : i < at ? 'done' : i === at ? 'current' : '';
           return (
             <li key={s} className={state}>
-              <button type="button" disabled={busy} onClick={() => run({ status: s })}>
-                <span className="vdot">{i < at ? <Check size={14} strokeWidth={3} /> : i + 1}</span>
-                <span className="vcopy"><small>Step {i + 1}</small><strong>{STATUS_LABEL[s]}</strong></span>
-              </button>
+              <span className="vdot">{i < at ? <Check size={14} strokeWidth={3} /> : i + 1}</span>
+              <span className="vcopy"><small>Step {i + 1}</small><strong>{STATUS_LABEL[s]}</strong></span>
             </li>
           );
         })}
       </ol>
-      <div>
-      {o.status === 'cancelled' && <p className="error">Cancelled. Stock for these pieces was returned.</p>}
+      {o.status === 'cancelled' ? (
+        <p className="error">Cancelled. Stock for these pieces was returned.</p>
+      ) : (
+        <>
+          <p className="step-hint">{next ? 'Click Next to move one step. The customer’s page updates with you.' : 'This order is delivered.'}</p>
+          <button type="button" className="btn-primary step-next" disabled={busy || !next} onClick={() => next && run({ status: next })}>
+            {busy ? 'Saving…' : next ? <><span>Next</span><strong>{STATUS_LABEL[next]}</strong></> : 'Delivered'}
+          </button>
+        </>
+      )}
+      </div>
       <div className="manage-grid">
         <div>
           <h4>Pieces</h4>
-          <table className="lines">
-            <tbody>
-              {o.items.map((it, i) => (
-                <tr key={`${it.productId}-${i}`}>
-                  <td>
-                    <strong>{it.name}</strong>
-                    <small className="muted">{money(it.price)} × {it.qty}</small>
-                  </td>
-                  <td>{money(it.price * it.qty)}</td>
-                </tr>
-              ))}
-              <tr><td>Delivery · {o.customer.area}</td><td>{money(o.deliveryFee)}</td></tr>
-              <tr className="total"><td>Total</td><td>{money(o.total)}</td></tr>
-            </tbody>
-          </table>
+          <div className="receipt-lines">
+            {o.items.map((it, i) => (
+              <article className="receipt-item" key={`${it.productId}-${i}`}>
+                <span className="receipt-no">{i + 1}</span>
+                <strong className="receipt-name">{it.name}</strong>
+                <span className="receipt-meta">{money(it.price)} × {it.qty}</span>
+                <strong className="receipt-amt">{money(it.price * it.qty)}</strong>
+              </article>
+            ))}
+          </div>
+          <div className="receipt-sums">
+            <p><span>Delivery · {o.customer.area}</span><strong>{money(o.deliveryFee)}</strong></p>
+            <p className="total"><span>Total</span><strong>{money(o.total)}</strong></p>
+          </div>
         </div>
         <div className="manage-side">
           <h4>Deliver to</h4>
-          <p className="who">{o.customer.name}</p>
+          <p className="who">{prettyName(o.customer.name)}</p>
           <p>{o.customer.phone}</p>
           <p>{o.customer.address}</p>
           <p>{o.customer.area}</p>
@@ -414,13 +419,12 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
             </select>
           </label>
           <div className="manage-links">
-            <a className="link" href={`https://wa.me/${o.customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Habari ${o.customer.name}, AfroFurnishers here about order ${o.id} (${STATUS_LABEL[o.status]}, ${money(o.total)}).`)}`} target="_blank" rel="noopener noreferrer">Message on WhatsApp</a>
+            <a className="icon-btn" aria-label="Message on WhatsApp" href={waHref(o.customer.phone, `Habari ${o.customer.name}, AfroFurnishers here about order ${o.id} (${STATUS_LABEL[o.status]}, ${money(o.total)}).`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /></a>
             {o.status !== 'cancelled' && (
               <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the stock?')) run({ status: 'cancelled' }); }}>Cancel order</button>
             )}
           </div>
         </div>
-      </div>
       </div>
       </div>
     </Modal>
@@ -560,26 +564,119 @@ function ProductRow({ p, onEdit, onHide, onStock }: {
 
 /* ---------------- customers / visitors / settings ---------------- */
 
+const BLANK_CUSTOMER = { id: '', name: '', phone: '', area: 'Kinondoni', address: '', notes: '' };
+
 function Customers() {
-  const [rows, setRows] = useState<CustomerRow[]>([]);
-  useEffect(() => {
-    api<{ customers: CustomerRow[] }>('/customers').then(d => setRows(d.customers)).catch(() => {});
+  const [rows, setRows] = useState<CustomerListItem[]>([]);
+  const [draft, setDraft] = useState(BLANK_CUSTOMER);
+  const [open, setOpen] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<CustomerListItem | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const data = await api<{ customers: CustomerListItem[] }>('/customers');
+    setRows(data.customers);
   }, []);
+
+  useEffect(() => { load().catch(() => setError('Could not load customers')); }, [load]);
+
+  function startNew() {
+    setDraft(BLANK_CUSTOMER);
+    setError('');
+    setOpen(true);
+  }
+
+  function startEdit(row: CustomerListItem) {
+    setDraft({ id: row.id, name: row.name, phone: row.phone, area: row.area || 'Kinondoni', address: row.address, notes: row.notes });
+    setError('');
+    setOpen(true);
+  }
+
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const body = JSON.stringify(draft);
+      if (draft.id) await api(`/customers/${encodeURIComponent(draft.id)}`, { method: 'PATCH', body });
+      else await api('/customers', { method: 'POST', body });
+      setOpen(false);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(row: CustomerListItem) {
+    setError('');
+    setBusy(true);
+    try {
+      await api(`/customers/${encodeURIComponent(row.id)}`, { method: 'DELETE' });
+      setPendingRemove(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <Card wide title={`${rows.length} customers`}>
+    <Card wide title={`${rows.length} customers`} action={<button type="button" className="btn-primary sm" onClick={startNew}><Plus size={14} /> Add</button>}>
+      {error && !open && <p className="error">{error}</p>}
       <div className="table-wrap"><table>
         <thead><tr><th>Name</th><th>Phone</th><th>Area</th><th>Orders</th><th>Spent</th><th>Last order</th><th></th></tr></thead>
         <tbody>
           {rows.map(r => (
-            <tr key={r.phone}>
-              <td><strong>{r.name}</strong></td><td>{r.phone}</td><td>{r.area}</td>
-              <td>{r.orders}</td><td>{money(r.spent)}</td>
-              <td className="muted">{timeAgo(r.lastOrder)}</td>
-              <td><a className="link" href={`https://wa.me/${r.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">WhatsApp</a></td>
+            <tr key={r.id}>
+              <td><strong>{prettyName(r.name)}</strong></td>
+              <td>{r.phone}</td>
+              <td>{r.area}</td>
+              <td>{r.orders}</td>
+              <td className="nowrap">{money(r.spent)}</td>
+              <td className="muted">{r.lastOrder ? timeAgo(r.lastOrder) : '—'}</td>
+              <td>
+                <div className="row-icons">
+                  <a className="icon-btn" aria-label={`Message ${r.name} on WhatsApp`} href={waHref(r.phone, `Habari ${r.name}, AfroFurnishers here.`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /></a>
+                  <button type="button" className="icon-btn" aria-label={`Edit ${r.name}`} onClick={() => startEdit(r)}><Pencil size={15} /></button>
+                  <button type="button" className="icon-btn" aria-label={`Remove ${r.name}`} onClick={() => setPendingRemove(r)}><Trash2 size={15} /></button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
       </table></div>
+      {!rows.length && <p className="muted">No customers yet. Add one to keep their name and phone.</p>}
+      {pendingRemove && (
+        <Modal title="Remove customer" onClose={() => setPendingRemove(null)}>
+          <p>Remove {prettyName(pendingRemove.name)} from this list. Past sales stay in Sales.</p>
+          {error && <p className="error">{error}</p>}
+          <div className="profile-actions">
+            <button type="button" className="btn-primary sm" disabled={busy} onClick={() => remove(pendingRemove)}>{busy ? 'Removing…' : 'Remove'}</button>
+            <button type="button" className="btn-ghost sm" onClick={() => setPendingRemove(null)}>Keep</button>
+          </div>
+        </Modal>
+      )}
+      {open && (
+        <Modal title={draft.id ? 'Update customer' : 'Add customer'} onClose={() => setOpen(false)}>
+          <form className="stack" onSubmit={save}>
+            <label>Name<input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} required placeholder="Amina Juma" /></label>
+            <label>Phone<input value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} required placeholder="0712 000 000" /></label>
+            <label>Area
+              <select value={draft.area} onChange={e => setDraft({ ...draft, area: e.target.value })}>
+                {AREAS.map(area => <option key={area} value={area}>{area}</option>)}
+              </select>
+            </label>
+            <label>Address<input value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} placeholder="Street, house, landmark" /></label>
+            <label>Note<input value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} placeholder="Gate code, invoice, floor" /></label>
+            {error && <p className="error">{error}</p>}
+            <button className="btn-primary sm" disabled={busy}>{busy ? 'Saving…' : draft.id ? 'Save changes' : 'Add customer'}</button>
+          </form>
+        </Modal>
+      )}
     </Card>
   );
 }
@@ -617,11 +714,81 @@ function Visitors({ stats }: { stats: DashboardStats }) {
   );
 }
 
+const EMPTY_PROFILE: AdminProfile = { name: '', phone: '', role: 'Admin', email: '', photo: '' };
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'AF';
+  return parts.slice(0, 2).map(part => part[0]?.toUpperCase() || '').join('');
+}
+
+function readPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 240;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Could not read that photo')); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that photo')); };
+    img.src = url;
+  });
+}
+
 function Settings({ bump }: { bump: () => void }) {
+  const [profile, setProfile] = useState<AdminProfile>(EMPTY_PROFILE);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileErr, setProfileErr] = useState('');
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api<{ profile: AdminProfile; passwordFromServer: boolean }>('/admin/profile')
+      .then(data => {
+        setProfile({ ...EMPTY_PROFILE, ...data.profile });
+        setLocked(Boolean(data.passwordFromServer));
+      })
+      .catch(() => {});
+  }, []);
+
+  async function onPhoto(file: File | undefined) {
+    if (!file) return;
+    setProfileErr('');
+    try {
+      const photo = await readPhoto(file);
+      setProfile(currentProfile => ({ ...currentProfile, photo }));
+    } catch (e) {
+      setProfileErr(e instanceof Error ? e.message : 'Could not read that photo');
+    }
+  }
+
+  async function saveProfile(e: FormEvent) {
+    e.preventDefault();
+    setProfileMsg('');
+    setProfileErr('');
+    setProfileBusy(true);
+    try {
+      const data = await api<{ profile: AdminProfile }>('/admin/profile', { method: 'PATCH', body: JSON.stringify(profile) });
+      setProfile(data.profile);
+      setProfileMsg('Saved. This is how the workshop sees you.');
+    } catch (e) {
+      setProfileErr(e instanceof Error ? e.message : 'Could not save');
+    } finally {
+      setProfileBusy(false);
+    }
+  }
 
   async function changePw(e: FormEvent) {
     e.preventDefault();
@@ -634,7 +801,10 @@ function Settings({ bump }: { bump: () => void }) {
       setNext('');
       bump();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed');
+      const message = e instanceof Error ? e.message : 'Failed';
+      setErr(message.includes('ADMIN_PASSWORD')
+        ? 'This password is set on the shop server, so change it there.'
+        : message);
     }
   }
 
@@ -650,16 +820,44 @@ function Settings({ bump }: { bump: () => void }) {
   }
 
   return (
-    <div className="grid">
-      <Card title="Change password">
+    <div className="settings-page">
+      <form className="profile-hero" onSubmit={saveProfile}>
+        <label className="avatar-pick">
+          {profile.photo
+            ? <img src={profile.photo} alt="" />
+            : <span className="ph">{initials(profile.name)}</span>}
+          <input type="file" accept="image/*" onChange={e => onPhoto(e.target.files?.[0])} />
+          <em>Change photo</em>
+        </label>
+        <div className="profile-fields">
+          <div>
+            <p className="manage-kicker">Your profile</p>
+            <h2>{profile.name.trim() || 'Add your name'}</h2>
+          </div>
+          <div className="fgrid">
+            <label>Name<input value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} required placeholder="Your name" /></label>
+            <label>Role<input value={profile.role} onChange={e => setProfile({ ...profile, role: e.target.value })} placeholder="Workshop admin" /></label>
+            <label>Phone<input value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="+255 692 009 222" /></label>
+            <label>Email<input type="email" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} placeholder="you@afrofurnishers.co.tz" /></label>
+          </div>
+          {profileErr && <p className="error">{profileErr}</p>}
+          {profileMsg && <p className="ok">{profileMsg}</p>}
+          <div className="profile-actions">
+            <button className="btn-primary sm" disabled={profileBusy}>{profileBusy ? 'Saving…' : 'Save details'}</button>
+            {profile.photo && <button type="button" className="btn-ghost sm" onClick={() => setProfile({ ...profile, photo: '' })}>Remove photo</button>}
+          </div>
+        </div>
+      </form>
+      <div className="cols-2">
+      <Card title="Password">
         <form onSubmit={changePw} className="stack">
           <label>Current password<input type="password" value={current} onChange={e => setCurrent(e.target.value)} autoComplete="current-password" /></label>
-          <label>New password (min 8 characters)<input type="password" value={next} onChange={e => setNext(e.target.value)} autoComplete="new-password" /></label>
+          <label>New password<input type="password" value={next} onChange={e => setNext(e.target.value)} autoComplete="new-password" placeholder="At least 8 characters" /></label>
           {err && <p className="error">{err}</p>}
           {msg && <p className="ok">{msg}</p>}
-          <button className="btn-primary sm">Update password</button>
+          <button className="btn-primary sm" disabled={locked}>Update password</button>
         </form>
-        <p className="muted">Tip: for production, set <code>ADMIN_PASSWORD</code> on the shop server instead — it always takes precedence.</p>
+        {locked && <p className="muted">This shop password is set on the server. Personal details above still save.</p>}
       </Card>
       <Card title="Store & payments">
         <p className="row"><span><Smartphone size={14} /> M-Pesa</span><strong>Manual confirm</strong></p>
@@ -667,6 +865,7 @@ function Settings({ bump }: { bump: () => void }) {
         <p className="row"><span><Wallet size={14} /> Delivery fees</span><strong>15k – 35k by area</strong></p>
         <button className="btn-ghost sm" onClick={backup}><Download size={14} /> Download backup (JSON)</button>
       </Card>
+      </div>
     </div>
   );
 }
@@ -894,22 +1093,32 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
               </div>
             </div>
             <aside className="pos-receipt">
-              <p className="manage-kicker">Receipt</p>
-              {chosen.length === 0 && <p className="muted">Choose a piece. The total stays at zero until then.</p>}
+              <div className="receipt-top">
+                <div>
+                  <p className="manage-kicker">Receipt</p>
+                  <strong>{name.trim() || 'New sale'}</strong>
+                </div>
+                <span className="receipt-count">{chosen.length}</span>
+              </div>
+              {chosen.length === 0 && <p className="muted">Choose a piece. Each one shows here on its own.</p>}
               <div className="receipt-lines">
               {chosen.map((l, i) => (
-                <p className="pos-row" key={`${l.productId}-${i}`}>
-                  <span>{l.product!.name}<small>{money(l.product!.price)} × {l.qty}</small></span>
-                  <strong>{money(l.line)}</strong>
-                </p>
+                <article className="receipt-item" key={`${l.productId}-${i}`}>
+                  <span className="receipt-no">{i + 1}</span>
+                  <strong className="receipt-name">{l.product!.name}</strong>
+                  <span className="receipt-meta">{money(l.product!.price)} × {l.qty}</span>
+                  <strong className="receipt-amt">{money(l.line)}</strong>
+                </article>
               ))}
               </div>
-              <p className="pos-row"><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
-              <p className="pos-row">
-                <span>Delivery · {area}<small>{chosen.length ? 'Added to this sale' : `${money(areaFee)} once a piece is added`}</small></span>
-                <strong>{money(fee)}</strong>
-              </p>
-              <p className="pos-row total"><span>Total</span><strong>{money(total)}</strong></p>
+              <div className="receipt-sums">
+                <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
+                <p>
+                  <span>Delivery<small>{area}{chosen.length ? '' : ` · ${money(areaFee)} once a piece is added`}</small></span>
+                  <strong>{money(fee)}</strong>
+                </p>
+                <p className="total"><span>Total</span><strong>{money(total)}</strong></p>
+              </div>
               {(stockNote || error) && <p className="error">{stockNote || error}</p>}
               <button className="btn-primary" disabled={busy || Boolean(stockNote)}>
                 {busy ? 'Saving…' : <><span>Record sale</span><strong>{money(total)}</strong></>}

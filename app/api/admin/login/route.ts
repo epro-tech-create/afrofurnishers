@@ -46,7 +46,7 @@ export async function PATCH(req: Request) {
   if (next.length < 8) return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 });
   if (!(await verifyPassword(current))) return NextResponse.json({ error: 'Current password is wrong' }, { status: 401 });
   const db = await readDB();
-  db.admin = { passwordHash: hashPassword(next), updatedAt: new Date().toISOString() };
+  db.admin = { passwordHash: hashPassword(next), updatedAt: new Date().toISOString(), profile: db.admin?.profile };
   await writeDB(db);
   const res = NextResponse.json({ ok: true, token: await adminToken() });
   res.headers.set('Set-Cookie', await adminCookieHeader());
