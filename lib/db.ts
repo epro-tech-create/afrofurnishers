@@ -20,8 +20,27 @@ export interface ShopDB {
   };
 }
 
+export function seedProducts(): ProductFull[] {
+  const t = new Date().toISOString();
+  const base: Omit<ProductFull, 'createdAt' | 'updatedAt'>[] = [
+    { id: 'masaki', name: 'Masaki Modular Sofa', category: 'Living Room', price: 2450000, oldPrice: 2750000, image: 'hero', material: 'Textured upholstery', dimensions: '240 × 95 × 78 cm', color: 'Terracotta', stock: 8, description: 'Deep-seat modular sofa for everyday living and hosting. Stain-resistant weave, solid frame.', featured: true, active: true },
+    { id: 'bahari', name: 'Bahari Dining Set', category: 'Dining Room', price: 1850000, image: 'dining', material: 'Natural wood', dimensions: '180 × 90 × 75 cm', color: 'Natural', stock: 5, description: 'Six-seat dining set in natural hardwood. Seats family meals and meetings comfortably.', featured: true, active: true },
+    { id: 'kariakoo', name: 'Kariakoo Accent Seat', category: 'Living Room', price: 680000, image: 'sofa', material: 'Woven upholstery', dimensions: '120 × 70 × 76 cm', color: 'Coral', stock: 12, description: 'Compact accent seat that brightens corners, lounges and reception areas.', featured: true, active: true },
+    { id: 'mikocheni-bed', name: 'Mikocheni Queen Bed', category: 'Bedroom', price: 1650000, image: 'hero', material: 'Hardwood + upholstered headboard', dimensions: '160 × 200 cm', color: 'Beige', stock: 6, description: 'Queen bed with padded headboard and under-bed clearance for storage.', featured: true, active: true },
+    { id: 'upanga-desk', name: 'Upanga Office Desk', category: 'Office', price: 540000, image: 'dining', material: 'Engineered wood + steel', dimensions: '140 × 70 × 75 cm', color: 'Walnut', stock: 15, description: 'Sturdy work desk with cable management for home and commercial offices.', featured: false, active: true },
+    { id: 'masaki-armchair', name: 'Masaki Armchair', category: 'Living Room', price: 720000, image: 'sofa', material: 'Boucle upholstery', dimensions: '85 × 80 × 78 cm', color: 'Cream', stock: 10, description: 'Plush armchair with solid legs. Pairs with the Masaki sofa or stands alone.', featured: false, active: true },
+    { id: 'oyster-bay-table', name: 'Oyster Bay Coffee Table', category: 'Living Room', price: 380000, image: 'dining', material: 'Mango wood', dimensions: '110 × 60 × 42 cm', color: 'Natural', stock: 20, description: 'Low coffee table with shelf for books and remotes.', featured: false, active: true },
+    { id: 'kigamboni-outdoor', name: 'Kigamboni Outdoor Set', category: 'Outdoor', price: 1280000, image: 'sofa', material: 'Weather-proof rattan + steel', dimensions: '4 seats + table', color: 'Sand', stock: 4, description: 'Balcony-ready 4-seat set that handles coastal air and sun.', featured: true, active: true },
+    { id: 'temeke-bunk', name: 'Temeke School Bunk', category: 'Bedroom', price: 890000, image: 'hero', material: 'Steel frame + hardwood slats', dimensions: '90 × 190 cm ×2', color: 'Grey', stock: 25, description: 'Institutional-grade bunk for schools, hostels and staff housing.', featured: false, active: true },
+    { id: 'ilala-waiting', name: 'Ilala Waiting Bench', category: 'Office', price: 960000, image: 'sofa', material: 'Steel + padded vinyl', dimensions: '180 × 60 × 85 cm', color: 'Forest', stock: 9, description: 'Three-seat waiting bench for hospitals, banks and reception areas.', featured: false, active: true },
+    { id: 'tandale-wardrobe', name: 'Tandale Wardrobe', category: 'Bedroom', price: 1120000, image: 'dining', material: 'Engineered wood', dimensions: '160 × 55 × 200 cm', color: 'Oak', stock: 7, description: 'Double-door wardrobe with hanging rail, shelves and lockable drawer.', featured: false, active: true },
+    { id: 'africa-union-board', name: 'Boardroom Table 10-Seat', category: 'Office', price: 3200000, image: 'dining', material: 'Hardwood veneer', dimensions: '300 × 120 × 75 cm', color: 'Dark walnut', stock: 3, description: 'Executive 10-seat boardroom table for offices and institutions.', featured: true, active: true },
+  ];
+  return base.map(p => ({ ...p, createdAt: t, updatedAt: t }));
+}
+
 function emptyDB(): ShopDB {
-  return { products: [], orders: [], visits: [], customers: [], contacts: [], hiddenCustomerKeys: [] };
+  return { products: seedProducts(), orders: [], visits: [], customers: [], contacts: [], hiddenCustomerKeys: [] };
 }
 
 function dbPath(): string {

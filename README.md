@@ -85,4 +85,4 @@ The shop opens at [http://localhost:4173](http://localhost:4173). The workshop p
 
 `npm run build` then `npm start` runs the same site for real use, still on port 4173.
 
-Orders, accounts, stock, and visits are stored in `data/shop-db.json` on the machine that runs the site. That file is not in this repository, because it holds customer names, phone numbers, and passwords. A new copy of the site starts empty. Products, orders, and visits begin at zero, and that file is created when someone uses the site.
+Orders, accounts, stock, and visits are stored in `data/shop-db.json` on the machine that runs the site. That file is not in this repository, because it holds customer names, phone numbers, and passwords. A new copy of the site starts with the furniture catalogue and no orders. That file is created when someone uses the site.
