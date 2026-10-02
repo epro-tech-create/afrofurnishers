@@ -182,10 +182,21 @@
 }
 @media (max-width: 860px) {
   .admin-app .shell{ grid-template-columns: 1fr; }
-  .admin-app .side{ position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
-  .admin-app .side nav{ display: flex; flex-wrap: wrap; gap: 6px; }
-  .admin-app .signout{ margin: 0 0 0 auto; }
-  .admin-app main{ padding: 20px 16px 50px; }
+  .admin-app .side{
+    position: sticky; top: 0; z-index: 8; height: auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand out" "nav nav"; gap: 8px 12px;
+    padding: 12px 12px 10px;
+  }
+  .admin-app .side .brand{ grid-area: brand; align-self: center; }
+  .admin-app .side nav{
+    position: static; top: auto; left: auto; right: auto; z-index: 1; grid-area: nav;
+    display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center;
+    gap: 6px; overflow-x: auto; padding: 0 0 2px; background: transparent; border: 0;
+    text-transform: none; letter-spacing: 0; font-size: 14px;
+  }
+  .admin-app .side nav button{ width: auto; flex: 0 0 auto; white-space: nowrap; padding: 8px 12px; }
+  .admin-app .signout{ grid-area: out; margin: 0; padding: 8px 12px; white-space: nowrap; align-self: center; }
+  .admin-app main{ padding: 16px 14px 48px; }
   .admin-app .stat-grid, .admin-app .stat-grid.cols-3{ grid-template-columns: 1fr 1fr; }
   .admin-app .pipeline{ grid-template-columns: repeat(3, 1fr); }
   .admin-app .fgrid, .admin-app .order-detail{ grid-template-columns: 1fr; }
@@ -416,6 +427,61 @@
   .admin-app .report-card{ grid-template-columns: 44px minmax(0, 1fr); }
   .admin-app .report-card .btn-primary{ grid-column: 1 / -1; }
   .admin-app .piece-table .qty-cell{ width: 64px; }
+  .admin-app .pos-receipt{ position: static; }
+}
+
+@media (max-width: 720px) {
+  .admin-app h1{ font-size: 24px; }
+  .admin-app .card{ padding: 14px; }
+  .admin-app .stat-grid, .admin-app .stat-grid.cols-3, .admin-app .pipeline{ grid-template-columns: 1fr 1fr; }
+  .admin-app .stat{ padding: 12px; }
+  .admin-app .stat strong{ font-size: 16px; white-space: normal; }
+  .admin-app .search, .admin-app .search input, .admin-app .sales-bar, .admin-app .toolbar{ width: 100%; }
+  .admin-app .search input{ min-width: 0; }
+  .admin-app .toolbar select{ width: 100%; }
+  .admin-app .modal-back{ padding: 0; align-items: end; }
+  .admin-app .modal, .admin-app .modal.wide{
+    width: 100%; max-height: 94vh; border-radius: 18px 18px 0 0; padding: 16px 14px 20px;
+  }
+  .admin-app .profile-hero{ padding: 16px; gap: 14px; }
+  .admin-app .profile-hero h2{ font-size: 22px; }
+  .admin-app .avatar-pick img, .admin-app .avatar-pick .ph{ width: 88px; height: 88px; font-size: 26px; }
+  .admin-app .sale-scroll, .admin-app .receipt-lines{ max-height: none; overflow: visible; }
+  .admin-app .pager{ justify-content: space-between; }
+  .admin-app .list-table{ min-width: 0; table-layout: auto; }
+  .admin-app .list-table thead{ display: none; }
+  .admin-app .list-table,
+  .admin-app .list-table tbody,
+  .admin-app .list-table tr,
+  .admin-app .list-table td{ display: block; width: auto; }
+  .admin-app .table-wrap > table.list-table th,
+  .admin-app .table-wrap > table.list-table td,
+  .admin-app .sales-table.list-table th,
+  .admin-app .sales-table.list-table td{ width: auto; white-space: normal; }
+  .admin-app .list-table tr{
+    border: 1px solid var(--line); border-radius: 14px; margin: 0 0 10px; padding: 10px 12px;
+  }
+  .admin-app .list-table td{ border: 0; padding: 5px 0; text-align: left; }
+  .admin-app .list-table td::before{
+    content: attr(data-label); display: block; margin-bottom: 2px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #444;
+  }
+  .admin-app .list-table td.lead{ padding-top: 0; }
+  .admin-app .list-table td.lead::before{ display: none; }
+  .admin-app .list-table td.lead strong{ font-size: 16px; }
+  .admin-app .list-table td.actions::before{ display: none; }
+  .admin-app .list-table td.actions .row-icons{ justify-content: flex-start; }
+  .admin-app .piece-table thead{ display: none; }
+  .admin-app .piece-table,
+  .admin-app .piece-table tbody{ display: block; }
+  .admin-app .piece-table tr{
+    display: grid; grid-template-columns: 76px minmax(0, 1fr) auto 40px;
+    gap: 8px; align-items: center; padding: 10px; border-bottom: 1px solid var(--line);
+  }
+  .admin-app .piece-table td{ display: block; width: auto; padding: 0; border: 0; white-space: normal; }
+  .admin-app .piece-table td:first-child{ grid-column: 1 / -1; }
+  .admin-app .piece-table .qty-cell{ width: auto; }
+  .admin-app .piece-table td.nowrap{ white-space: normal; width: auto; }
 }
 
 .admin-app header, .admin-app .top {
