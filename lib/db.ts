@@ -10,7 +10,14 @@ export interface ShopDB {
   customers: CustomerAccount[];
   contacts: ShopContact[];
   hiddenCustomerKeys: string[];
-  admin?: { passwordHash: string; updatedAt: string; profile?: AdminProfile };
+  /** Random signing key used only when ADMIN_SECRET is not set. Never send this to the browser. */
+  sessionSecret?: string;
+  admin?: {
+    passwordHash: string;
+    updatedAt: string;
+    profile?: AdminProfile;
+    sessions?: { hash: string; expiresAt: number }[];
+  };
 }
 
 const now = () => new Date().toISOString();

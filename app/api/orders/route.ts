@@ -37,9 +37,13 @@ export async function POST(req: Request) {
   const phone = admin ? String(customer.phone || '').trim() : account!.phone;
 
   if (!itemsIn.length) return NextResponse.json({ error: 'Your bag is empty' }, { status: 400 });
+  if (itemsIn.length > 30) return NextResponse.json({ error: 'Too many pieces in one order' }, { status: 400 });
   if (admin && name.length < 2) return NextResponse.json({ error: 'Customer name is required' }, { status: 400 });
+  if (name.length > 80) return NextResponse.json({ error: 'Name is too long' }, { status: 400 });
   if (admin && digits(phone).length < 9) return NextResponse.json({ error: 'A valid customer phone is required' }, { status: 400 });
-  if (!String(customer.address || '').trim()) return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 });
+  if (digits(phone).length > 15) return NextResponse.json({ error: 'Phone number is too long' }, { status: 400 });
+  const address = String(customer.address || '').trim().slice(0, 200);
+  if (!address) return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 });
 
   const db = await readDB();
   const items: OrderItem[] = [];
@@ -53,7 +57,7 @@ export async function POST(req: Request) {
   }
 
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const area = String(customer.area || 'Kinondoni');
+  const area = String(customer.area || 'Kinondoni').trim().slice(0, 40);
   const payment = body.payment === 'shop' ? 'shop' : 'cod';
   const deliveryFee = payment === 'shop' ? 0 : deliveryFeeFor(area);
   const total = subtotal + deliveryFee;
@@ -70,9 +74,9 @@ export async function POST(req: Request) {
     customerId: admin ? linked?.id : account!.id,
     items,
     customer: {
-      name,
-      phone,
-      address: String(customer.address).trim(),
+      name: name.slice(0, 80),
+      phone: phone.slice(0, 20),
+      address,
       area,
       notes: customer.notes ? String(customer.notes).slice(0, 500) : undefined,
     },

@@ -33,8 +33,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   for (const k of allowed) {
     if (k in body) (updated as Record<string, unknown>)[k] = body[k];
   }
-  if (typeof updated.price === 'number') updated.price = Math.max(0, Math.round(updated.price));
-  if (typeof updated.stock === 'number') updated.stock = Math.max(0, Math.floor(updated.stock));
+  if (typeof updated.price === 'number') updated.price = Math.max(0, Math.min(1e12, Math.round(updated.price)));
+  if (typeof updated.stock === 'number') updated.stock = Math.max(0, Math.min(100000, Math.floor(updated.stock)));
+  updated.name = String(updated.name || '').slice(0, 120);
+  updated.description = String(updated.description || '').slice(0, 2000);
   if ('image' in body) {
     try {
       updated.image = await saveProductPhoto(id, body.image, db.products[i].image || 'hero');

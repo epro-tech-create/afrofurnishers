@@ -4,8 +4,27 @@ import type { CustomerAccount, PublicCustomer } from './shop-types';
 
 export const CUSTOMER_COOKIE = 'afro_customer';
 
-const SECRET = () => process.env.ADMIN_SECRET || 'afro-secret-change-me-in-env';
+const PLACEHOLDER_SECRET = 'afro-secret-change-me-in-env';
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
+let cachedSecret: string | null = null;
+
+async function signingSecret(): Promise<string> {
+  if (cachedSecret) return cachedSecret;
+  const env = process.env.ADMIN_SECRET || '';
+  if (env && env !== PLACEHOLDER_SECRET && env.length >= 16) {
+    cachedSecret = env;
+    return env;
+  }
+  const db = await readDB();
+  if (db.sessionSecret && db.sessionSecret.length >= 32) {
+    cachedSecret = db.sessionSecret;
+    return db.sessionSecret;
+  }
+  db.sessionSecret = randomBytes(32).toString('hex');
+  await writeDB(db);
+  cachedSecret = db.sessionSecret;
+  return db.sessionSecret;
+}
 
 export function phoneKey(input: string): string {
   const digits = (input || '').replace(/\D/g, '');
@@ -33,25 +52,26 @@ export function toPublicCustomer(account: CustomerAccount): PublicCustomer {
   return { id: account.id, name: account.name, phone: account.phone };
 }
 
-function signSession(id: string): string {
+async function signSession(id: string): Promise<string> {
   const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
   const payload = `${id}.${exp}`;
-  const sig = createHmac('sha256', SECRET()).update(`customer:${payload}`).digest('hex');
+  const sig = createHmac('sha256', await signingSecret()).update(`customer:${payload}`).digest('hex');
   return `${payload}.${sig}`;
 }
 
-function readSession(token: string | null): string | null {
+async function readSession(token: string | null): Promise<string | null> {
   if (!token) return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [id, exp, sig] = parts;
   if (!id || !exp || !sig) return null;
   const payload = `${id}.${exp}`;
-  const expected = createHmac('sha256', SECRET()).update(`customer:${payload}`).digest('hex');
+  const expected = createHmac('sha256', await signingSecret()).update(`customer:${payload}`).digest('hex');
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   if (Number(exp) < Math.floor(Date.now() / 1000)) return null;
+  if (!/^cus_[a-f0-9]+$/.test(id)) return null;
   return id;
 }
 
@@ -65,20 +85,28 @@ function cookieValue(req: Request): string | null {
 }
 
 export async function getCustomer(req: Request): Promise<PublicCustomer | null> {
-  const id = readSession(cookieValue(req));
+  const id = await readSession(cookieValue(req));
   if (!id) return null;
   const db = await readDB();
   const account = db.customers.find(c => c.id === id);
   return account ? toPublicCustomer(account) : null;
 }
 
-export function customerCookieHeader(id: string): string {
+export async function customerCookieHeader(id: string): Promise<string> {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `${CUSTOMER_COOKIE}=${encodeURIComponent(signSession(id))}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_SECONDS}${secure}`;
+  return `${CUSTOMER_COOKIE}=${encodeURIComponent(await signSession(id))}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_SECONDS}${secure}`;
 }
 
 export function clearCustomerCookieHeader(): string {
-  return `${CUSTOMER_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${CUSTOMER_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
+}
+
+const DUMMY_PASSWORD_HASH = hashCustomerPassword('not-a-real-account');
+
+/** Spend the same time as a real check when the phone is unknown. */
+export function disguiseMissingAccount(password: string): void {
+  verifyCustomerPassword(password, DUMMY_PASSWORD_HASH);
 }
 
 const attempts = new Map<string, { count: number; resetAt: number }>();

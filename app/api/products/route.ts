@@ -23,12 +23,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!await isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json().catch(() => null);
-  if (!body?.name || typeof body.price !== 'number') {
+  const price = Number(body?.price);
+  if (!body?.name || !Number.isFinite(price) || price < 0 || price > 1e12) {
     return NextResponse.json({ error: 'Name and numeric price are required' }, { status: 400 });
   }
   const db = await readDB();
   const idBase = String(body.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || `product-${Date.now()}`;
-  let id = body.id && typeof body.id === 'string' ? body.id : idBase;
+  const requested = typeof body.id === 'string' ? body.id.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40) : '';
+  let id = requested || idBase;
   if (db.products.some(p => p.id === id)) id = `${idBase}-${Date.now().toString(36)}`;
   const t = new Date().toISOString();
   let image = 'hero';
@@ -39,16 +41,16 @@ export async function POST(req: Request) {
   }
   const product = {
     id,
-    name: String(body.name),
-    category: String(body.category || 'Living Room'),
-    price: Math.max(0, Math.round(body.price)),
-    oldPrice: typeof body.oldPrice === 'number' ? body.oldPrice : undefined,
+    name: String(body.name).slice(0, 120),
+    category: String(body.category || 'Living Room').slice(0, 40),
+    price: Math.max(0, Math.round(price)),
+    oldPrice: typeof body.oldPrice === 'number' && Number.isFinite(body.oldPrice) ? Math.round(body.oldPrice) : undefined,
     image,
-    material: String(body.material || ''),
-    dimensions: String(body.dimensions || ''),
-    color: String(body.color || ''),
-    stock: Math.max(0, Math.floor(Number(body.stock ?? 0))),
-    description: String(body.description || ''),
+    material: String(body.material || '').slice(0, 80),
+    dimensions: String(body.dimensions || '').slice(0, 80),
+    color: String(body.color || '').slice(0, 40),
+    stock: Math.max(0, Math.min(100000, Math.floor(Number(body.stock ?? 0)) || 0)),
+    description: String(body.description || '').slice(0, 2000),
     featured: Boolean(body.featured),
     active: body.active !== false,
     createdAt: t,

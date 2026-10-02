@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import {
   adminCookieHeader,
-  adminToken,
   clearAdminCookieHeader,
   clientIp,
   isAdminRequest,
   isPasswordSetViaEnv,
+  issueAdminSession,
   loginBlocked,
+  revokeAdminSession,
   recordLoginAttempt,
   hashPassword,
   verifyPassword,
@@ -29,9 +30,9 @@ export async function POST(req: Request) {
   if (!ok) {
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }
-  // Token auth for the standalone admin app (own port) + cookie for same-origin.
-  const res = NextResponse.json({ ok: true, token: await adminToken() });
-  res.headers.set('Set-Cookie', await adminCookieHeader());
+  const token = await issueAdminSession();
+  const res = NextResponse.json({ ok: true });
+  res.headers.set('Set-Cookie', adminCookieHeader(token));
   return res;
 }
 
@@ -46,14 +47,21 @@ export async function PATCH(req: Request) {
   if (next.length < 8) return NextResponse.json({ error: 'New password must be at least 8 characters' }, { status: 400 });
   if (!(await verifyPassword(current))) return NextResponse.json({ error: 'Current password is wrong' }, { status: 401 });
   const db = await readDB();
-  db.admin = { passwordHash: hashPassword(next), updatedAt: new Date().toISOString(), profile: db.admin?.profile };
+  db.admin = {
+    passwordHash: hashPassword(next),
+    updatedAt: new Date().toISOString(),
+    profile: db.admin?.profile,
+    sessions: [],
+  };
   await writeDB(db);
-  const res = NextResponse.json({ ok: true, token: await adminToken() });
-  res.headers.set('Set-Cookie', await adminCookieHeader());
+  const token = await issueAdminSession();
+  const res = NextResponse.json({ ok: true });
+  res.headers.set('Set-Cookie', adminCookieHeader(token));
   return res;
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  await revokeAdminSession(req);
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', clearAdminCookieHeader());
   return res;

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { clientIp } from '@/lib/admin-auth';
+import { clientIp, tooMany } from '@/lib/admin-auth';
 import {
   clearCustomerCookieHeader,
   createCustomer,
   customerCookieHeader,
   customerLoginBlocked,
+  disguiseMissingAccount,
   findCustomerByPhone,
   getCustomer,
   phoneKey,
@@ -41,13 +42,16 @@ export async function POST(req: Request) {
   if (password.length > 72) return NextResponse.json({ error: 'Password is too long.' }, { status: 400 });
 
   if (action === 'signup') {
+    if (tooMany(`signup:${ip}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Too many new accounts from here. Try again later.' }, { status: 429 });
+    }
     if (name.length < 2) return NextResponse.json({ error: 'Enter your full name.' }, { status: 400 });
     if (name.length > 80) return NextResponse.json({ error: 'Name is too long.' }, { status: 400 });
     if (digits(phone).length < 9) return NextResponse.json({ error: 'Enter a valid phone number.' }, { status: 400 });
     try {
       const customer = await createCustomer({ name, phone, password });
       const res = NextResponse.json({ customer });
-      res.headers.set('Set-Cookie', customerCookieHeader(customer.id));
+      res.headers.set('Set-Cookie', await customerCookieHeader(customer.id));
       return res;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not create account';
@@ -56,6 +60,7 @@ export async function POST(req: Request) {
   }
 
   const account = await findCustomerByPhone(phone);
+  if (!account) disguiseMissingAccount(password);
   const ok = Boolean(account && verifyCustomerPassword(password, account.passwordHash));
   recordCustomerLogin(ip, ok);
   if (!account || !ok) {
@@ -63,7 +68,7 @@ export async function POST(req: Request) {
   }
   const customer = toPublicCustomer(account);
   const res = NextResponse.json({ customer });
-  res.headers.set('Set-Cookie', customerCookieHeader(customer.id));
+  res.headers.set('Set-Cookie', await customerCookieHeader(customer.id));
   return res;
 }
 

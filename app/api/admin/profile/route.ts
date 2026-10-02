@@ -38,6 +38,7 @@ export async function PATCH(req: Request) {
     passwordHash: db.admin?.passwordHash || '',
     updatedAt: db.admin?.updatedAt || new Date().toISOString(),
     profile,
+    sessions: db.admin?.sessions,
   };
   await writeDB(db);
   return NextResponse.json({ profile });
