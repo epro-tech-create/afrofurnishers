@@ -172,9 +172,15 @@
 .admin-app .fgrid{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .admin-app .fgrid .full{ grid-column: 1 / -1; }
 .admin-app .photo-pick > span{ font-size: 13px; font-weight: 600; }
-.admin-app .photo-pick-row{ display: grid; gap: 8px; margin-top: 8px; }
-.admin-app .photo-file{ position: relative; overflow: hidden; display: inline-flex; }
-.admin-app .photo-file input{ position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.admin-app .photo-pick-row{ position: relative; display: grid; gap: 8px; margin-top: 8px; }
+.admin-app .photo-input{
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); border: 0; min-height: 0;
+}
+.admin-app .pform-actions{
+  position: sticky; bottom: 0; display: flex; justify-content: flex-end;
+  padding-top: 12px; background: #fff;
+}
 .admin-app .inv-name{ display: flex; gap: 10px; align-items: center; text-align: left; }
 .admin-app .inv-name img{ width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: #f6f6f6; flex: 0 0 auto; }
 .admin-app .view-toggle{ display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: #fff; }

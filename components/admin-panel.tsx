@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   AlertTriangle, Banknote, Boxes, Check, Download, Eye, FileDown, LayoutDashboard, LayoutGrid, List, Lock, LogOut,
   MessageCircle, Package, Pencil, Plus, RefreshCw, Search, ShoppingBag, Trash2,
@@ -481,6 +481,7 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
   const [view, setView] = useState<'list' | 'cards'>('list');
   const [pendingDelete, setPendingDelete] = useState<ProductFull | null>(null);
   const [busy, setBusy] = useState(false);
+  const photoRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -496,17 +497,30 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
 
   async function save(e: FormEvent, id?: string) {
     e.preventDefault();
-    if (id) {
-      const data = await api<{ product: ProductFull }>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(draft) });
-      setItems(items.map(p => (p.id === id ? data.product : p)));
-      setEditing(null);
-    } else {
-      const data = await api<{ product: ProductFull }>('/products', { method: 'POST', body: JSON.stringify(draft) });
-      setItems([data.product, ...items]);
-      setCreating(false);
-      setDraft(EMPTY);
+    const name = String(draft.name || '').trim();
+    const price = Number(draft.price);
+    if (name.length < 2) { setError('Enter the product name.'); return; }
+    if (!Number.isFinite(price) || price < 0) { setError('Enter a price in TZS.'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      const body = { ...draft, name, price };
+      if (id) {
+        const data = await api<{ product: ProductFull }>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+        setItems(items.map(p => (p.id === id ? data.product : p)));
+        setEditing(null);
+      } else {
+        const data = await api<{ product: ProductFull }>('/products', { method: 'POST', body: JSON.stringify(body) });
+        setItems([data.product, ...items]);
+        setCreating(false);
+        setDraft(EMPTY);
+      }
+      bump();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save that product');
+    } finally {
+      setBusy(false);
     }
-    bump();
   }
 
   async function remove(p: ProductFull) {
@@ -544,23 +558,25 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         <div className="full photo-pick">
           <span>Photo</span>
           <div className="photo-pick-row">
-            <div>
-              <label className="btn-ghost sm photo-file">
-                Add photo
-                <input type="file" accept="image/*" onChange={async e => {
-                  const file = e.target.files?.[0];
-                  e.target.value = '';
-                  if (!file) return;
-                  try {
-                    setError('');
-                    setD({ ...d, image: await readProductPhoto(file) });
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Could not read that photo');
-                  }
-                }} />
-              </label>
-              <p className="muted">This photo is what customers see on the shop.</p>
-            </div>
+            <button type="button" className="btn-ghost sm" onClick={() => photoRef.current?.click()}>Add photo</button>
+            <input
+              ref={photoRef}
+              className="photo-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={async e => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (!file) return;
+                try {
+                  setError('');
+                  setD({ ...d, image: await readProductPhoto(file) });
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Could not read that photo');
+                }
+              }}
+            />
+            <p className="muted">{String(d.image || '').startsWith('data:') ? 'Photo added. This is what customers see.' : 'Add a JPG or PNG. This is what customers see on the shop.'}</p>
           </div>
         </div>
         <label>Material<input value={d.material || ''} onChange={e => setD({ ...d, material: e.target.value })} /></label>
@@ -569,7 +585,10 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         <label className="check"><input type="checkbox" checked={!!d.featured} onChange={e => setD({ ...d, featured: e.target.checked })} /> Featured on homepage</label>
         <label className="check"><input type="checkbox" checked={d.active !== false} onChange={e => setD({ ...d, active: e.target.checked })} /> Visible in shop</label>
       </div>
-      <button className="btn-primary sm">{id ? 'Save changes' : 'Add product'}</button>
+      {error && <p className="error" role="alert">{error}</p>}
+      <div className="pform-actions">
+        <button type="submit" className="btn-primary" disabled={busy}>{busy ? 'Saving…' : id ? 'Save changes' : 'Add product'}</button>
+      </div>
     </form>
   );
 
@@ -580,7 +599,7 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         <button type="button" className={view === 'list' ? 'on' : ''} aria-pressed={view === 'list'} aria-label="List view" onClick={() => setView('list')}><List size={16} /></button>
         <button type="button" className={view === 'cards' ? 'on' : ''} aria-pressed={view === 'cards'} aria-label="Card view" onClick={() => setView('cards')}><LayoutGrid size={16} /></button>
       </div>
-      <button className="btn-primary sm" onClick={() => { setEditing(null); setDraft(EMPTY); setCreating(true); }}><Plus size={14} /> New</button>
+      <button type="button" className="btn-primary sm" onClick={() => { setError(''); setEditing(null); setDraft(EMPTY); setCreating(true); }}><Plus size={14} /> New</button>
     </div>}>
       {error && <p className="error">{error}</p>}
       <p className="muted sale-lead">{items.filter(p => p.active).reduce((s, p) => s + p.stock, 0)} units on hand · {items.filter(p => p.active && p.stock <= 5).length} pieces at 5 or below.</p>
