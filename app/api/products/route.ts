@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
+import { saveProductPhoto } from '@/lib/save-product-photo';
 
 export async function GET(req: Request) {
   const db = await readDB();
@@ -30,13 +31,19 @@ export async function POST(req: Request) {
   let id = body.id && typeof body.id === 'string' ? body.id : idBase;
   if (db.products.some(p => p.id === id)) id = `${idBase}-${Date.now().toString(36)}`;
   const t = new Date().toISOString();
+  let image = 'hero';
+  try {
+    image = await saveProductPhoto(id, body.image);
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Could not save that photo' }, { status: 400 });
+  }
   const product = {
     id,
     name: String(body.name),
     category: String(body.category || 'Living Room'),
     price: Math.max(0, Math.round(body.price)),
     oldPrice: typeof body.oldPrice === 'number' ? body.oldPrice : undefined,
-    image: String(body.image || 'hero'),
+    image,
     material: String(body.material || ''),
     dimensions: String(body.dimensions || ''),
     color: String(body.color || ''),

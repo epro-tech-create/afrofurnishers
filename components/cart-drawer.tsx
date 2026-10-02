@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
+import { productImage } from '@/lib/catalog';
 import { useStore, money } from './store';
 
 export function CartDrawer() {
@@ -46,7 +47,7 @@ export function CartDrawer() {
                   if (!p) return null;
                   return (
                     <div key={id} className="cart-line">
-                      <img src={`/assets/${p.image}.jpg`} alt="" width={120} height={120} />
+                      <img src={productImage(p.image)} alt="" width={120} height={120} />
                       <div>
                         <strong>{p.name}</strong>
                         <small className="muted">{money(p.price)} each</small>

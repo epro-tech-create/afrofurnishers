@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
+import { saveProductPhoto } from '@/lib/save-product-photo';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,6 +27,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
   if (typeof updated.price === 'number') updated.price = Math.max(0, Math.round(updated.price));
   if (typeof updated.stock === 'number') updated.stock = Math.max(0, Math.floor(updated.stock));
+  if ('image' in body) {
+    try {
+      updated.image = await saveProductPhoto(id, body.image, db.products[i].image || 'hero');
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : 'Could not save that photo' }, { status: 400 });
+    }
+  }
   updated.updatedAt = new Date().toISOString();
   db.products[i] = updated;
   await writeDB(db);

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUpRight, Heart, Minus, Plus, ShoppingBag } from 'lucide-react';
-import { money, rooms } from '@/lib/catalog';
+import { money, productImage, rooms } from '@/lib/catalog';
 import type { ProductFull } from '@/lib/shop-types';
 import { Reveal } from './motion';
 import { usePrefs } from './prefs';
@@ -27,7 +27,7 @@ export function ProductDetail({ product: p, compact = false }: { product: Produc
   return (
     <div className={`detail ${compact ? 'compact' : ''}`}>
       <div className="product-zoom-wrap">
-        <img src={`/assets/${p.image}.jpg`} alt={p.name} width={900} height={1100} className="detail-img" />
+        <img src={productImage(p.image)} alt={p.name} width={900} height={1100} className="detail-img" />
         <StockBadge stock={p.stock} />
       </div>
       <div>
@@ -90,7 +90,7 @@ export function ProductCard({ product: p, onQuick }: { product: ProductFull; onQ
     >
       <div className="product-image">
         <Link href={`/product/${p.id}`}>
-          <img src={`/assets/${p.image}.jpg`} alt={p.name} width={650} height={750} loading="lazy" />
+          <img src={productImage(p.image)} alt={p.name} width={650} height={750} loading="lazy" />
         </Link>
         <StockBadge stock={p.stock} />
         <button className={`heart ${wished ? 'active' : ''}`} aria-label="Save to wishlist" aria-pressed={wished} onClick={() => toggle(p.id)}>

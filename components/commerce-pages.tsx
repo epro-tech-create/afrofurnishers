@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Minus, Plus, Trash2, Truck, Banknote, PackageSearch, RotateCcw, ShoppingBag, CheckCircle2, Phone, MapPin, ClipboardList, BadgeCheck, Package, Home, Check } from 'lucide-react';
-import { money } from '@/lib/catalog';
+import { money, productImage } from '@/lib/catalog';
 import { DELIVERY_FEES, type Order } from '@/lib/shop-types';
 import { AccountAuth } from './account-auth';
 import { Loader } from './loader';
@@ -38,7 +38,7 @@ export function CartPage() {
             if (!p) return null;
             return (
               <div key={id} className="cart-line cart-line-lg">
-                <Link href={`/product/${p.id}`}><img src={`/assets/${p.image}.jpg`} alt={p.name} width={160} height={160} /></Link>
+                <Link href={`/product/${p.id}`}><img src={`${productImage(p.image)}`} alt={p.name} width={160} height={160} /></Link>
                 <div>
                   <Link href={`/product/${p.id}`}><strong>{p.name}</strong></Link>
                   <p className="muted">{p.category} · {money(p.price)} each</p>
@@ -90,7 +90,7 @@ export function WishlistPage() {
         {items.map(p => p && (
           <article key={p.id} className="product">
             <div className="product-image">
-              <Link href={`/product/${p.id}`}><img src={`/assets/${p.image}.jpg`} alt={p.name} width={650} height={750} /></Link>
+              <Link href={`/product/${p.id}`}><img src={`${productImage(p.image)}`} alt={p.name} width={650} height={750} /></Link>
             </div>
             <div className="product-info">
               <div>
@@ -282,7 +282,7 @@ export function CheckoutPage() {
             <div className="cart-lines">
               {lines.map(({ p, qty }) => p && (
                 <div key={p.id} className="cart-line cart-line-lg">
-                  <Link href={`/product/${p.id}`}><img src={`/assets/${p.image}.jpg`} alt={p.name} width={120} height={120} /></Link>
+                  <Link href={`/product/${p.id}`}><img src={`${productImage(p.image)}`} alt={p.name} width={120} height={120} /></Link>
                   <div>
                     <Link href={`/product/${p.id}`}><strong>{p.name}</strong></Link>
                     <p className="muted">{money(p.price)} each</p>
@@ -495,7 +495,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
           <div className="receipt">
             {order.items.map(it => (
               <p key={it.productId} className="receipt-row">
-                <span className="receipt-item"><img src={`/assets/${it.image}.jpg`} alt="" width={48} height={48} />{it.name} × {it.qty}</span>
+                <span className="receipt-item"><img src={`${productImage(it.image)}`} alt="" width={48} height={48} />{it.name} × {it.qty}</span>
                 <strong>{money(it.price * it.qty)}</strong>
               </p>
             ))}
@@ -622,7 +622,7 @@ export function OrdersDashboardPage() {
                 <OrderProgress status={o.status} />
                 <div className="order-items">
                   {o.items.map(it => (
-                    <p key={it.productId}><img src={`/assets/${it.image}.jpg`} alt="" width={44} height={44} /><span>{it.name} × {it.qty}</span><strong>{money(it.price * it.qty)}</strong></p>
+                    <p key={it.productId}><img src={`${productImage(it.image)}`} alt="" width={44} height={44} /><span>{it.name} × {it.qty}</span><strong>{money(it.price * it.qty)}</strong></p>
                   ))}
                 </div>
                 <p className="grand"><span>Total (incl. delivery)</span><strong>{money(o.total)}</strong></p>

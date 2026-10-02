@@ -103,7 +103,7 @@ function buildPdf(pages: Cmd[][]): Uint8Array {
 }
 
 export function downloadShopReport(orders: Order[], products: ProductFull[], kind: 'sales' | 'stock' | 'full' = 'full') {
-  const titles = { sales: 'Sales report', stock: 'Stock report', full: 'Shop report' } as const;
+  const titles = { sales: 'Sales report', stock: 'Inventory report', full: 'Shop report' } as const;
   const stamp = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const pages: Cmd[][] = [];
   let page: Cmd[] = [];
@@ -165,8 +165,8 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
   } else {
     cards.push(
       { label: 'Pieces on hand', value: String(units) },
-      { label: 'Stock value', value: tzs(stockValue) },
-      { label: 'Low stock', value: String(low) },
+      { label: 'Inventory value', value: tzs(stockValue) },
+      { label: 'Low inventory', value: String(low) },
       { label: 'Catalogue', value: String(products.filter(p => p.active).length) },
     );
   }
@@ -245,7 +245,7 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
       text('NOTE', 766, y, 8, true, WHITE);
       top -= 22;
     };
-    sectionTitle('Stock on hand');
+    sectionTitle('Inventory on hand');
     columns();
     const stock = products.filter(p => p.active).sort((a, b) => a.name.localeCompare(b.name));
     stock.forEach((product, index) => {

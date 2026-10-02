@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (!p) return NextResponse.json({ error: `Product no longer available: ${line.productId}` }, { status: 400 });
     const qty = Math.floor(Number(line.qty));
     if (!Number.isFinite(qty) || qty < 1 || qty > 99) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
-    if (p.stock < qty) return NextResponse.json({ error: `Only ${p.stock} left in stock: ${p.name}` }, { status: 400 });
+    if (p.stock < qty) return NextResponse.json({ error: `Only ${p.stock} left of ${p.name}` }, { status: 400 });
     items.push({ productId: p.id, name: p.name, price: p.price, qty, image: p.image });
   }
 

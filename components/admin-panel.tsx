@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '@/lib/admin-client';
 import { Loader } from '@/components/loader';
-import { money } from '@/lib/catalog';
+import { money, productImage } from '@/lib/catalog';
 import { downloadShopReport } from '@/lib/pdf-report';
 import { DELIVERY_FEES, deliveryFeeFor, type AdminProfile, type CustomerListItem, type DashboardStats, type Order, type OrderStatus, type PaymentStatus, type ProductFull } from '@/lib/shop-types';
 
@@ -178,7 +178,7 @@ function Dashboard({ stats, goOrders, goSales }: { stats: DashboardStats; goOrde
     { label: 'Site visits', value: String(stats.visitors.total), sub: `${stats.visitors.today} today`, icon: Eye, tone: 'forest' },
     { label: 'Customers', value: String(stats.customers), sub: `${stats.visitors.unique7d} unique / 7d`, icon: Users, tone: 'plum' },
     { label: 'Needs action', value: String(stats.pendingOrders), sub: 'pending + confirmed', icon: AlertTriangle, tone: 'red' },
-    { label: 'Avg order', value: money(stats.avgOrderValue), sub: `${stats.lowStock} low-stock items`, icon: TrendingUp, tone: 'blue' },
+    { label: 'Avg order', value: money(stats.avgOrderValue), sub: `${stats.lowStock} low inventory`, icon: TrendingUp, tone: 'blue' },
   ];
   return (
     <div className="grid">
@@ -227,8 +227,8 @@ function Dashboard({ stats, goOrders, goSales }: { stats: DashboardStats; goOrde
           ))}
         </Card>
         <Card title="Needs attention">
-          <h4>Low stock (≤ 5)</h4>
-          {stats.lowStockProducts.length === 0 && <p className="muted">All stocked up.</p>}
+          <h4>Low inventory (≤ 5)</h4>
+          {stats.lowStockProducts.length === 0 && <p className="muted">Nothing is running low.</p>}
           {stats.lowStockProducts.map(p => (
             <p key={p.id} className="row warn"><span>{p.name}</span><strong>{p.stock} left</strong></p>
           ))}
@@ -381,7 +381,7 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
         })}
       </ol>
       {o.status === 'cancelled' ? (
-        <p className="error">Cancelled. Stock for these pieces was returned.</p>
+        <p className="error">Cancelled. These pieces were returned to inventory.</p>
       ) : (
         <>
           <p className="step-hint">{next ? 'Click Next to move one step. The customer’s page updates with you.' : 'This order is delivered.'}</p>
@@ -425,7 +425,7 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
           <div className="manage-links">
             <a className="icon-btn" aria-label="Message on WhatsApp" href={waHref(o.customer.phone, `Habari ${o.customer.name}, AfroFurnishers here about order ${o.id} (${STATUS_LABEL[o.status]}, ${money(o.total)}).`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /></a>
             {o.status !== 'cancelled' && (
-              <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the stock?')) run({ status: 'cancelled' }); }}>Cancel order</button>
+              <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the pieces to inventory?')) run({ status: 'cancelled' }); }}>Cancel order</button>
             )}
           </div>
         </div>
@@ -438,6 +438,29 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
 /* ---------------- products ---------------- */
 
 const EMPTY: Partial<ProductFull> = { name: '', category: 'Living Room', price: 0, image: 'hero', material: '', dimensions: '', color: '', stock: 10, description: '', featured: false, active: true };
+const SHOWROOM = ['hero', 'dining', 'sofa'] as const;
+
+function readProductPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) { reject(new Error('Choose a photo.')); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 1200;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Could not read that photo')); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that photo')); };
+    img.src = url;
+  });
+}
 
 function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }) {
   const [items, setItems] = useState<ProductFull[]>([]);
@@ -496,10 +519,37 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         </select></label>
         <label>Price (TZS)<input type="number" min={0} value={d.price ?? 0} onChange={e => setD({ ...d, price: Number(e.target.value) })} required /></label>
         <label>Old price<input type="number" min={0} value={d.oldPrice ?? ''} onChange={e => setD({ ...d, oldPrice: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>
-        <label>Stock<input type="number" min={0} value={d.stock ?? 0} onChange={e => setD({ ...d, stock: Number(e.target.value) })} required /></label>
-        <label>Photo<select value={d.image || 'hero'} onChange={e => setD({ ...d, image: e.target.value })}>
-          <option value="hero">hero</option><option value="dining">dining</option><option value="sofa">sofa</option>
-        </select></label>
+        <label>Inventory<input type="number" min={0} value={d.stock ?? 0} onChange={e => setD({ ...d, stock: Number(e.target.value) })} required /></label>
+        <div className="full photo-pick">
+          <span>Photo</span>
+          <div className="photo-pick-row">
+            <img src={productImage(d.image)} alt="" />
+            <div>
+              <label className="btn-ghost sm photo-file">
+                Add photo
+                <input type="file" accept="image/*" onChange={async e => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!file) return;
+                  try {
+                    setError('');
+                    setD({ ...d, image: await readProductPhoto(file) });
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Could not read that photo');
+                  }
+                }} />
+              </label>
+              <p className="muted">This photo is what customers see on the shop.</p>
+              <div className="photo-presets">
+                {SHOWROOM.map(key => (
+                  <button type="button" key={key} className={d.image === key ? 'on' : ''} aria-label={`Use the ${key} showroom photo`} onClick={() => setD({ ...d, image: key })}>
+                    <img src={productImage(key)} alt="" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
         <label>Material<input value={d.material || ''} onChange={e => setD({ ...d, material: e.target.value })} /></label>
         <label>Colour<input value={d.color || ''} onChange={e => setD({ ...d, color: e.target.value })} /></label>
         <label className="full">Dimensions<input value={d.dimensions || ''} onChange={e => setD({ ...d, dimensions: e.target.value })} placeholder="240 × 95 × 78 cm" /></label>
@@ -529,7 +579,7 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         </Modal>
       )}
       <div className="table-wrap"><table className="stock-table list-table">
-        <thead><tr><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Product</th><th>Price</th><th>Inventory</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {list.map(p => (
             <ProductRow key={p.id} p={p}
@@ -548,13 +598,15 @@ function ProductRow({ p, onEdit, onHide, onStock }: {
 }) {
   return (
     <tr className={p.stock <= 5 ? 'warn' : ''}>
-      <td className="lead" data-label="Product"><strong>{p.name}</strong><br /><small className="muted">{p.category} · {p.id}</small></td>
+      <td className="lead" data-label="Product">
+        <span className="inv-name"><img src={productImage(p.image)} alt="" /><span><strong>{p.name}</strong><br /><small className="muted">{p.category} · {p.id}</small></span></span>
+      </td>
       <td data-label="Price">{money(p.price)}</td>
-      <td data-label="Stock">
+      <td data-label="Inventory">
         <span className="stock-ctl">
-          <button className="mini" aria-label="Decrease stock" onClick={() => onStock(-1)}>−</button>
+          <button className="mini" aria-label="Decrease inventory" onClick={() => onStock(-1)}>−</button>
           <strong>{p.stock}</strong>
-          <button className="mini" aria-label="Increase stock" onClick={() => onStock(1)}>+</button>
+          <button className="mini" aria-label="Increase inventory" onClick={() => onStock(1)}>+</button>
         </span>
       </td>
       <td data-label="Status">{p.active ? <span className="pill st-delivered">Live</span> : <span className="pill st-cancelled">Hidden</span>}{p.featured ? ' ★' : ''}</td>
@@ -987,7 +1039,7 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
       {notice && <p className="ok banner">{notice}</p>}
       <Card wide title="Sales" action={<button type="button" className="btn-primary sm" onClick={() => setOpen(true)}><Plus size={14} /> Add sale</button>}>
         <div className="sales-bar">
-          <p className="muted sale-lead">{shown.length} sales · {units} units in stock{low ? ` · ${low} low` : ''}</p>
+          <p className="muted sale-lead">{shown.length} sales · {units} units in inventory{low ? ` · ${low} low` : ''}</p>
           <div className="search"><Search size={14} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search name, phone, sale" aria-label="Search sales" /></div>
         </div>
         {error && !open && <p className="error">{error}</p>}
@@ -1051,7 +1103,7 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
               </div>
               <div className="sale-scroll">
                 <table className="piece-table">
-                  <thead><tr><th>Product</th><th>Qty</th><th>Stock</th><th>Amount</th><th></th></tr></thead>
+                  <thead><tr><th>Product</th><th>Qty</th><th>Inventory</th><th>Amount</th><th></th></tr></thead>
                   <tbody>
                     {priced.map((l, i) => {
                       const asked = l.product ? (qtyByProduct[l.productId] || 0) : 0;
@@ -1123,8 +1175,8 @@ function Reports() {
   const [error, setError] = useState('');
   const items = [
     { id: 'sales' as const, title: 'Sales report', detail: 'Every sale with the customer, date, pieces, total, and status.' },
-    { id: 'stock' as const, title: 'Stock report', detail: 'Pieces on hand, the price, and the value sitting in the showroom.' },
-    { id: 'full' as const, title: 'Shop report', detail: 'Sales and stock together in one file.' },
+    { id: 'stock' as const, title: 'Inventory report', detail: 'Pieces on hand, the price, and the value sitting in the showroom.' },
+    { id: 'full' as const, title: 'Shop report', detail: 'Sales and inventory together in one file.' },
   ];
   async function download(kind: 'sales' | 'stock' | 'full') {
     setBusy(kind);
@@ -1166,7 +1218,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'sale', label: 'Sales', icon: ShoppingBag },
   { id: 'orders', label: 'Orders', icon: Package },
-  { id: 'products', label: 'Stock', icon: Boxes },
+  { id: 'products', label: 'Inventory', icon: Boxes },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'reports', label: 'Reports', icon: FileDown },
   { id: 'visitors', label: 'Visitors', icon: Eye },
