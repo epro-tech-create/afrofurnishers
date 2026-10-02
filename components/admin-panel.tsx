@@ -366,70 +366,80 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
   const next = at >= 0 && at < FLOW.length - 1 ? FLOW[at + 1] : null;
   return (
     <Modal title={o.id} wide onClose={onClose}>
-      <p className="manage-kicker">{o.source === 'admin' ? 'Counter sale' : 'Website order'} · the customer sees this same line</p>
-      <div className="manage-layout">
-      <div className="step-col">
-      <ol className="vstep" aria-label="Order progress">
-        {FLOW.map((s, i) => {
-          const state = at < 0 ? '' : i < at ? 'done' : i === at ? 'current' : '';
-          return (
-            <li key={s} className={state}>
-              <span className="vdot">{i < at ? <Check size={14} strokeWidth={3} /> : i + 1}</span>
-              <span className="vcopy"><small>Step {i + 1}</small><strong>{STATUS_LABEL[s]}</strong></span>
-            </li>
-          );
-        })}
-      </ol>
-      {o.status === 'cancelled' ? (
-        <p className="error">Cancelled. These pieces were returned to inventory.</p>
-      ) : (
-        <>
-          <p className="step-hint">{next ? 'Click Next to move one step. The customer’s page updates with you.' : 'This order is delivered.'}</p>
-          <button type="button" className="btn-primary step-next" disabled={busy || !next} onClick={() => next && run({ status: next })}>
-            {busy ? 'Saving…' : next ? <><span>Next</span><strong>{STATUS_LABEL[next]}</strong></> : 'Delivered'}
-          </button>
-        </>
-      )}
-      </div>
-      <div className="manage-grid">
-        <div>
-          <h4>Pieces</h4>
-          <div className="receipt-lines">
-            {o.items.map((it, i) => (
-              <article className="receipt-item" key={`${it.productId}-${i}`}>
-                <span className="receipt-no">{i + 1}</span>
-                <strong className="receipt-name">{it.name}</strong>
-                <span className="receipt-meta">{money(it.price)} × {it.qty}</span>
-                <strong className="receipt-amt">{money(it.price * it.qty)}</strong>
-              </article>
-            ))}
-          </div>
-          <div className="receipt-sums">
-            <p><span>Delivery · {o.customer.area}</span><strong>{money(o.deliveryFee)}</strong></p>
-            <p className="total"><span>Total</span><strong>{money(o.total)}</strong></p>
-          </div>
+      <div className="order-sheet">
+        <div className="order-chips">
+          <span className="pill">{o.source === 'admin' ? 'Counter sale' : 'Website order'}</span>
+          <span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span>
+          <span className="muted">Updated {timeAgo(o.updatedAt)}</span>
         </div>
-        <div className="manage-side">
-          <h4>Deliver to</h4>
-          <p className="who">{prettyName(o.customer.name)}</p>
-          <p>{o.customer.phone}</p>
-          <p>{o.customer.address}</p>
-          <p>{o.customer.area}</p>
-          {o.customer.notes && <p className="muted">{o.customer.notes}</p>}
-          <p className="muted">Updated {timeAgo(o.updatedAt)}</p>
-          <label>Payment
-            <select value={shownPay(o.paymentStatus)} disabled={busy} onChange={e => run({ paymentStatus: e.target.value })}>
-              {(Object.keys(PAY_LABEL) as PaymentStatus[]).map(s => <option key={s} value={s}>{PAY_LABEL[s]}</option>)}
-            </select>
-          </label>
-          <div className="manage-links">
-            <a className="icon-btn" aria-label="Message on WhatsApp" href={waHref(o.customer.phone, `Habari ${o.customer.name}, AfroFurnishers here about order ${o.id} (${STATUS_LABEL[o.status]}, ${money(o.total)}).`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /></a>
-            {o.status !== 'cancelled' && (
-              <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the pieces to inventory?')) run({ status: 'cancelled' }); }}>Cancel order</button>
-            )}
-          </div>
+
+        <section className="order-progress" aria-label="Order progress">
+          <ol className="order-track">
+            {FLOW.map((s, i) => {
+              const state = at < 0 ? '' : i < at ? 'done' : i === at ? 'current' : '';
+              return (
+                <li key={s} className={state}>
+                  <span className="vdot">{i < at ? <Check size={14} strokeWidth={3} /> : i + 1}</span>
+                  <strong>{STATUS_LABEL[s]}</strong>
+                </li>
+              );
+            })}
+          </ol>
+          {o.status === 'cancelled' ? (
+            <p className="error">Cancelled. These pieces were returned to inventory.</p>
+          ) : (
+            <div className="order-next">
+              <p>{next ? 'Next moves this order one step. The customer sees the same step.' : 'This order is delivered.'}</p>
+              <button type="button" className="btn-primary" disabled={busy || !next} onClick={() => next && run({ status: next })}>
+                {busy ? 'Saving…' : next ? `Next · ${STATUS_LABEL[next]}` : 'Delivered'}
+              </button>
+            </div>
+          )}
+        </section>
+
+        <div className="order-body">
+          <section className="order-card">
+            <h4>Pieces</h4>
+            <ul className="piece-rows">
+              {o.items.map((it, i) => (
+                <li key={`${it.productId}-${i}`}>
+                  <div>
+                    <strong>{it.name}</strong>
+                    <span>{money(it.price)} × {it.qty}</span>
+                  </div>
+                  <strong>{money(it.price * it.qty)}</strong>
+                </li>
+              ))}
+            </ul>
+            <div className="receipt-sums">
+              <p><span>Delivery · {o.customer.area}</span><strong>{money(o.deliveryFee)}</strong></p>
+              <p className="total"><span>Total</span><strong>{money(o.total)}</strong></p>
+            </div>
+          </section>
+
+          <section className="order-card">
+            <h4>Customer</h4>
+            <dl className="facts">
+              <div><dt>Name</dt><dd>{prettyName(o.customer.name)}</dd></div>
+              <div><dt>Phone</dt><dd>{o.customer.phone}</dd></div>
+              <div><dt>Address</dt><dd>{o.customer.address}</dd></div>
+              <div><dt>Area</dt><dd>{o.customer.area}</dd></div>
+              <div><dt>Pay</dt><dd>{o.payment === 'shop' ? 'At the shop' : 'On delivery'}</dd></div>
+              {o.customer.notes && <div><dt>Note</dt><dd>{o.customer.notes}</dd></div>}
+            </dl>
+            <label className="pay-field">Payment
+              <select value={shownPay(o.paymentStatus)} disabled={busy} onChange={e => run({ paymentStatus: e.target.value })}>
+                {(Object.keys(PAY_LABEL) as PaymentStatus[]).map(s => <option key={s} value={s}>{PAY_LABEL[s]}</option>)}
+              </select>
+            </label>
+            <div className="order-actions">
+              <a className="btn-ghost sm" href={waHref(o.customer.phone, `Habari ${o.customer.name}, AfroFurnishers here about order ${o.id} (${STATUS_LABEL[o.status]}, ${money(o.total)}).`)} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
+              {o.status !== 'cancelled' && (
+                <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the pieces to inventory?')) run({ status: 'cancelled' }); }}>Cancel order</button>
+              )}
+            </div>
+          </section>
         </div>
-      </div>
       </div>
     </Modal>
   );
