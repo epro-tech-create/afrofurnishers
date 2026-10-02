@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { MotionConfig, motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ArrowUpRight, Sun, Moon, ShoppingBag } from 'lucide-react';
+import { Menu, X, ArrowUp, ArrowUpRight, Sun, Moon, ShoppingBag } from 'lucide-react';
 import { PrefsProvider, usePrefs } from './prefs';
 import { StoreProvider, useStore } from './store';
 import { CartDrawer } from './cart-drawer';
@@ -159,6 +159,33 @@ function LegacyLinks() {
   return null;
 }
 
+function BackToTop() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 480);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <button
+      type="button"
+      className="to-top"
+      aria-label="Back to top"
+      onClick={() => {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      }}
+    >
+      <ArrowUp size={18} />
+    </button>
+  );
+}
+
 function ShellSkip() {
   const { t } = usePrefs();
   return <a className="skip" href="#main">{t.skip}</a>;
@@ -178,6 +205,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Header />
           <main id="main" tabIndex={-1}>{children}</main>
           <Footer />
+          <BackToTop />
           <CartDrawer />
         </StoreProvider>
       </PrefsProvider>
