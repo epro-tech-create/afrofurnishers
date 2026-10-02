@@ -170,9 +170,10 @@ export function TestimonialsStage() {
   const [index, setIndex] = useState(0);
   const reduced = useReducedMotion();
   const item = t.testimonials[index];
+  if (!item) return null;
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || t.testimonials.length === 0) return;
     const id = setInterval(() => setIndex(i => (i + 1) % t.testimonials.length), 6500);
     return () => clearInterval(id);
   }, [reduced, t.testimonials.length]);

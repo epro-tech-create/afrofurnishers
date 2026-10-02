@@ -9,11 +9,7 @@ export interface Product {
   color: string;
 }
 
-export const products: Product[] = [
-  { id: 'masaki', name: 'Masaki Modular Sofa', category: 'Living Room', price: 2450000, image: 'hero', material: 'Textured upholstery', dimensions: '240 × 95 × 78 cm', color: 'Terracotta' },
-  { id: 'bahari', name: 'Bahari Dining Set', category: 'Dining Room', price: 1850000, image: 'dining', material: 'Natural wood', dimensions: '180 × 90 × 75 cm', color: 'Natural' },
-  { id: 'kariakoo', name: 'Kariakoo Accent Seat', category: 'Living Room', price: 680000, image: 'sofa', material: 'Woven upholstery', dimensions: '120 × 70 × 76 cm', color: 'Coral' },
-];
+export const products: Product[] = [];
 
 export const rooms = ['All', 'Living Room', 'Dining Room', 'Bedroom', 'Office', 'Outdoor'];
 export const money = (value: number) => `TZS ${new Intl.NumberFormat('en-TZ').format(value)}`;

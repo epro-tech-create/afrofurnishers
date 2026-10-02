@@ -90,7 +90,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     fetch('/api/products', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
-        if (live && data?.products?.length) {
+        if (live && Array.isArray(data?.products)) {
           setProducts(data.products);
           // Drop cart lines for products that no longer exist
           setCart(old => {
