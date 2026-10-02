@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowUpRight, Heart, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { ArrowUpRight, Heart, Minus, Plus, ShoppingBag, SlidersHorizontal } from 'lucide-react';
 import { money, productImage, rooms } from '@/lib/catalog';
 import type { ProductFull } from '@/lib/shop-types';
 import { Reveal } from './motion';
@@ -139,8 +139,10 @@ export function ProductGrid({ items }: { items: ProductFull[] }) {
 
 export function Collection() {
   const [category, setCategory] = useState('All');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const { t } = usePrefs();
   const { products } = useStore();
+  const rooms = ['All', 'Living Room', 'Dining Room', 'Bedroom', 'Office'];
   const items = useMemo(
     () => products.filter(p => p.active && (category === 'All' || p.category === category)).slice(0, 6),
     [products, category],
@@ -155,13 +157,17 @@ export function Collection() {
         <Link className="text-link" href="/shop">{t.workCta} →</Link>
       </Reveal>
       <p className="section-lead">{t.workLead}</p>
-      <div className="tabs" aria-label="Work categories">
-        {['All', 'Living Room', 'Dining Room', 'Bedroom', 'Office'].map(c => (
-          <button key={c} className={c === category ? 'active' : ''} aria-pressed={c === category} onClick={() => setCategory(c)}>
-            {category === c && <motion.span className="tab-pill" layoutId="collection-pill" transition={{ type: 'spring', stiffness: 350, damping: 30 }} />}
-            <span>{c}</span>
-          </button>
-        ))}
+      <div className="tabs">
+        <button type="button" className="tab-filter" aria-expanded={filtersOpen} aria-label="Filter categories" onClick={() => setFiltersOpen(open => !open)}>
+          <SlidersHorizontal size={16} /> {category}
+        </button>
+        <div className={filtersOpen ? 'tab-scroll open' : 'tab-scroll'} role="group" aria-label="Work categories">
+          {rooms.map(c => (
+            <button key={c} className={c === category ? 'active' : ''} aria-pressed={c === category} onClick={() => { setCategory(c); setFiltersOpen(false); }}>
+              <span>{c}</span>
+            </button>
+          ))}
+        </div>
       </div>
       <ProductGrid items={items} />
     </section>

@@ -1,4 +1,4 @@
-export type PaymentMethod = 'cod';
+export type PaymentMethod = 'cod' | 'shop';
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'delivering' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'paid';
 

@@ -54,7 +54,8 @@ export async function POST(req: Request) {
 
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const area = String(customer.area || 'Kinondoni');
-  const deliveryFee = deliveryFeeFor(area);
+  const payment = body.payment === 'shop' ? 'shop' : 'cod';
+  const deliveryFee = payment === 'shop' ? 0 : deliveryFeeFor(area);
   const total = subtotal + deliveryFee;
   const t = new Date().toISOString();
 
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
       area,
       notes: customer.notes ? String(customer.notes).slice(0, 500) : undefined,
     },
-    payment: 'cod',
+    payment,
     subtotal,
     deliveryFee,
     total,

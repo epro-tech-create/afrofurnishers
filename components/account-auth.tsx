@@ -57,9 +57,6 @@ export function AccountAuth({
           <input value={password} onChange={e => setPassword(e.target.value)} required minLength={6} maxLength={72} type="password" placeholder={mode === 'signup' ? 'At least 6 characters' : 'Your password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
         </label>
       </div>
-      {mode === 'signup' && (
-        <p className="muted">Use the phone you want on the order. Past purchases with this number show up in your account.</p>
-      )}
       {error && <p role="alert" className="form-error">{error}</p>}
       <button className="button" disabled={busy}>
         {busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}

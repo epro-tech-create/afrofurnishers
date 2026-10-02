@@ -78,6 +78,7 @@ function Header() {
             </Link>
           );
         })}
+        <AccountLink />
       </nav>
       <div className="tools">
         <Link className="tools-link" href="/orders">Orders</Link>

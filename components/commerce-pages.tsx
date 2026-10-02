@@ -60,7 +60,7 @@ export function CartPage() {
         <aside className="cart-summary">
           <h2>Summary</h2>
           <p><span>Subtotal</span><strong>{money(subtotal)}</strong></p>
-          <p className="muted">Delivery fee added at checkout (from TZS 15,000). You’ll sign in so you can track the order.</p>
+          <p className="muted">Delivery is added at checkout.</p>
           <Link className="button" href="/checkout">Checkout →</Link>
           <button className="text-link" onClick={() => setCartOpen(true)}>Quick view bag</button>
         </aside>
@@ -121,9 +121,10 @@ export function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<Order | null>(null);
+  const [payAt, setPayAt] = useState<'cod' | 'shop'>('cod');
 
   const lines = useMemo(() => Object.entries(cart).map(([id, qty]) => ({ p: productById(id), qty })).filter(x => x.p), [cart, productById]);
-  const fee = DELIVERY_FEES[form.area] ?? 20000;
+  const fee = payAt === 'shop' ? 0 : (DELIVERY_FEES[form.area] ?? 20000);
   const total = subtotal + (lines.length ? fee : 0);
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export function CheckoutPage() {
     return () => clearInterval(timer);
   }, [done]);
 
-  const detailsError = !form.address.trim()
+  const detailsError = payAt === 'cod' && !form.address.trim()
     ? 'Please enter your delivery address.'
     : '';
 
@@ -171,8 +172,8 @@ export function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: lines.map(({ p, qty }) => ({ productId: p!.id, qty })),
-          customer: { name: form.name, phone: form.phone, address: form.address, area: form.area, notes: form.notes },
-          payment: 'cod',
+          customer: { name: form.name, phone: form.phone, address: form.address.trim() || 'AfroFurnishers showroom, Dar es Salaam', area: form.area, notes: form.notes },
+          payment: payAt,
         }),
       });
       const data = await res.json();
@@ -249,9 +250,9 @@ export function CheckoutPage() {
       <section className="page checkout-page">
         <p className="eyebrow">CHECKOUT</p>
         <h1>Create an account to check out.</h1>
-        <p>Sign up once. After that you can follow every piece from the workshop to your door.</p>
+        <p>Sign up once to follow your order until it arrives.</p>
         <div className="checkout-layout">
-          <AccountAuth intro="Your name and phone stay on the order, so tracking is tied to you." />
+          <AccountAuth />
           <aside className="cart-summary" aria-label="Order summary">
             <h2>Your bag</h2>
             {lines.map(({ p, qty }) => p && <p key={p.id}><span>{p.name} × {qty}</span><strong>{money(p.price * qty)}</strong></p>)}
@@ -306,7 +307,7 @@ export function CheckoutPage() {
               <div className="account-lock full">
                 <p className="eyebrow">SIGNED IN</p>
                 <p><strong>{customer.name}</strong><br />{customer.phone}</p>
-                <p className="muted">Orders are saved to this account so you can track them later.</p>
+                <p className="muted">This account keeps your orders.</p>
               </div>
               <label className="full">Delivery address<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required maxLength={200} placeholder="Street, ward, landmark" autoComplete="street-address" /></label>
               <label>Area
@@ -315,6 +316,16 @@ export function CheckoutPage() {
                 </select>
               </label>
               <label>Notes (optional)<input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} maxLength={500} placeholder="Gate, floor, call on arrival…" /></label>
+              <div className="full pay-choices">
+                <button type="button" className={payAt === 'cod' ? 'on' : ''} onClick={() => setPayAt('cod')}>
+                  <strong>Pay on delivery</strong>
+                  <span>Cash when the furniture arrives.</span>
+                </button>
+                <button type="button" className={payAt === 'shop' ? 'on' : ''} onClick={() => setPayAt('shop')}>
+                  <strong>Pay at the shop</strong>
+                  <span>Cash if you come to the showroom.</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -330,8 +341,8 @@ export function CheckoutPage() {
               </div>
               <div>
                 <p className="eyebrow">Pay with</p>
-                <p className="confirm-name">Cash on delivery</p>
-                <p className="muted">Pay in cash when the furniture arrives.</p>
+                <p className="confirm-name">{payAt === 'shop' ? 'Pay at the shop' : 'Pay on delivery'}</p>
+                <p className="muted">{payAt === 'shop' ? 'Cash at the showroom. No delivery fee.' : 'Cash when the furniture arrives.'}</p>
               </div>
             </div>
           )}
@@ -367,6 +378,10 @@ const STEP_LABEL: Record<(typeof STATUS_STEPS)[number], string> = {
   pending: 'Order placed', confirmed: 'Confirmed', preparing: 'Preparing',
   delivering: 'On the way', delivered: 'Delivered',
 };
+function payWhere(payment: string) {
+  return payment === 'shop' ? 'At the shop' : 'On delivery';
+}
+
 const STEP_ICON = {
   pending: ClipboardList, confirmed: BadgeCheck, preparing: Package, delivering: Truck, delivered: Home,
 } as const;
@@ -480,7 +495,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
           <div className="track-card-head">
             <div>
               <p className="order-id-chip">{order.id}</p>
-              <p className="muted">Cash on delivery · {new Date(order.createdAt).toLocaleString()}</p>
+              <p className="muted">{payWhere(order.payment)} · {new Date(order.createdAt).toLocaleString()}</p>
             </div>
             <span className={`pill ${ORDER_PILL[order.status] || ''}`}>{order.status === 'cancelled' ? 'Cancelled' : STEP_LABEL[order.status as (typeof STATUS_STEPS)[number]] || order.status}</span>
           </div>
@@ -612,33 +627,31 @@ export function OrdersDashboardPage() {
           <div className="order-list">
             {orders.map(o => (
               <article key={o.id} className="order-card">
-                <div className="order-head">
-                  <div>
+                <button type="button" className="order-toggle" aria-expanded={open === o.id} onClick={() => setOpen(open === o.id ? null : o.id)}>
+                  <span>
                     <strong>{o.id}</strong>
-                    <small className="muted"> · {new Date(o.createdAt).toLocaleDateString()} · Cash</small>
-                  </div>
+                    <small className="muted">{new Date(o.createdAt).toLocaleDateString()} · {payWhere(o.payment)} · {money(o.total)}</small>
+                  </span>
                   <span className={`pill ${ORDER_PILL[o.status] || ''}`}>{o.status === 'cancelled' ? 'Cancelled' : STEP_LABEL[o.status as (typeof STATUS_STEPS)[number]] || o.status}</span>
-                </div>
-                <OrderProgress status={o.status} />
-                <div className="order-items">
-                  {o.items.map(it => (
-                    <p key={it.productId}><img src={`${productImage(it.image)}`} alt="" width={44} height={44} /><span>{it.name} × {it.qty}</span><strong>{money(it.price * it.qty)}</strong></p>
-                  ))}
-                </div>
-                <p className="grand"><span>Total (incl. delivery)</span><strong>{money(o.total)}</strong></p>
+                </button>
                 {open === o.id && (
-                  <div className="review-card">
-                    <p className="muted">{o.customer.name} · {o.customer.phone}<br />{o.customer.address}, {o.customer.area}</p>
-                    <p className="muted">Payment: {o.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'} · Updated {new Date(o.updatedAt).toLocaleString()}</p>
-                  </div>
+                  <>
+                    <OrderProgress status={o.status} />
+                    <div className="order-items">
+                      {o.items.map(it => (
+                        <p key={it.productId}><img src={`${productImage(it.image)}`} alt="" width={44} height={44} /><span>{it.name} × {it.qty}</span><strong>{money(it.price * it.qty)}</strong></p>
+                      ))}
+                    </div>
+                    <p className="muted">{o.customer.address}, {o.customer.area}</p>
+                    <p className="muted">{o.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}</p>
+                    <div className="buttons order-foot">
+                      <Link className="text-link" href={`/order/${o.id}`}>Full tracking →</Link>
+                      {o.status !== 'cancelled' && (
+                        <button type="button" className="text-link" onClick={() => buyAgain(o)}><RotateCcw size={13} /> Buy again</button>
+                      )}
+                    </div>
+                  </>
                 )}
-                <div className="buttons order-foot">
-                  <button type="button" className="text-link" onClick={() => setOpen(open === o.id ? null : o.id)}>{open === o.id ? 'Hide details' : 'Details'}</button>
-                  <Link className="text-link" href={`/order/${o.id}`}>Full tracking →</Link>
-                  {o.status !== 'cancelled' && (
-                    <button type="button" className="text-link" onClick={() => buyAgain(o)}><RotateCcw size={13} /> Buy again</button>
-                  )}
-                </div>
               </article>
             ))}
           </div>
