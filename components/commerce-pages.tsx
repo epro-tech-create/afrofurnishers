@@ -714,8 +714,10 @@ export function AccountPage() {
               <p className="muted">{latest.items.map(it => it.name).join(', ')} · {money(latest.total)}</p>
               <Link className="text-link" href={`/order/${latest.id}`}>Track this order</Link>
             </div>
+          ) : orders ? (
+            <p className="muted">No orders yet. Your first checkout will show up here.</p>
           ) : (
-            {orders ? <p className="muted">No orders yet. Your first checkout will show up here.</p> : <Loader label="Loading your orders" />}
+            <Loader label="Loading your orders" />
           )}
         </article>
         <div className="hub-card hub-actions-stack">
