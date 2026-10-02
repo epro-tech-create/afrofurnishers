@@ -448,7 +448,6 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
 /* ---------------- products ---------------- */
 
 const EMPTY: Partial<ProductFull> = { name: '', category: 'Living Room', price: 0, image: 'hero', material: '', dimensions: '', color: '', stock: 10, description: '', featured: false, active: true };
-const SHOWROOM = ['hero', 'dining', 'sofa'] as const;
 
 function readProductPhoto(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -545,7 +544,6 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
         <div className="full photo-pick">
           <span>Photo</span>
           <div className="photo-pick-row">
-            <img src={productImage(d.image)} alt="" />
             <div>
               <label className="btn-ghost sm photo-file">
                 Add photo
@@ -562,19 +560,11 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
                 }} />
               </label>
               <p className="muted">This photo is what customers see on the shop.</p>
-              <div className="photo-presets">
-                {SHOWROOM.map(key => (
-                  <button type="button" key={key} className={d.image === key ? 'on' : ''} aria-label={`Use the ${key} showroom photo`} onClick={() => setD({ ...d, image: key })}>
-                    <img src={productImage(key)} alt="" />
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
         <label>Material<input value={d.material || ''} onChange={e => setD({ ...d, material: e.target.value })} /></label>
         <label>Colour<input value={d.color || ''} onChange={e => setD({ ...d, color: e.target.value })} /></label>
-        <label className="full">Dimensions<input value={d.dimensions || ''} onChange={e => setD({ ...d, dimensions: e.target.value })} placeholder="240 × 95 × 78 cm" /></label>
         <label className="full">Description<textarea value={d.description || ''} onChange={e => setD({ ...d, description: e.target.value })} /></label>
         <label className="check"><input type="checkbox" checked={!!d.featured} onChange={e => setD({ ...d, featured: e.target.checked })} /> Featured on homepage</label>
         <label className="check"><input type="checkbox" checked={d.active !== false} onChange={e => setD({ ...d, active: e.target.checked })} /> Visible in shop</label>
