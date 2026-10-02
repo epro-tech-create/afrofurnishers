@@ -1196,6 +1196,10 @@ footer {
 .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; }
 .footer-top h2 { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
 .footer-lead { color: #b8b6b0; max-width: 380px; font-size: 14px; }
+.footer-visit { display: grid; gap: 6px; max-width: 380px; margin: 18px 0 22px; }
+.footer-visit p { margin: 0; font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #c8c8c8; }
+.footer-visit span { color: #fff; font-size: 15px; line-height: 1.45; }
+.footer-top .footer-visit a { display: inline; margin: 0; color: #fff; font-size: 15px; }
 .footer-top > div:not(:first-child) { font-size: 14px; }
 .footer-top > div:not(:first-child) > p {
   font-size: 11px;

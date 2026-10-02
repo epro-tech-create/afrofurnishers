@@ -116,6 +116,11 @@ function Footer() {
           <p className="eyebrow">{t.ctaEyebrow}</p>
           <h2>{t.ctaTitle}</h2>
           <p className="footer-lead">{t.footerLead}</p>
+          <div className="footer-visit">
+            <p>{t.footerVisit}</p>
+            <span>{t.footerAddress}</span>
+            <a href={`mailto:${t.footerEmail}`}>{t.footerEmail}</a>
+          </div>
           <Link className="button" href="/shop">{t.footerTalk} <ArrowUpRight size={17} /></Link>
         </div>
         <div>
