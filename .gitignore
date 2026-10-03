@@ -8,3 +8,4 @@ data/shop-db.json
 public/uploads/
 
 .vercel
+.neon

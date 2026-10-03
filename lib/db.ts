@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { ensureShopSchema, loadShop, saveShop } from './neon-store';
 import type { AdminProfile, CustomerAccount, Order, ProductFull, ShopContact, Visit } from './shop-types';
 
 export interface ShopDB {
@@ -64,6 +65,10 @@ let cache: ShopDB | null = null;
 let cachePath: string | null = null;
 
 export async function readDB(): Promise<ShopDB> {
+  if (process.env.DATABASE_URL) {
+    await ensureShopSchema(seedProducts);
+    return loadShop();
+  }
   if (cache) return cache;
   const primary = dbPath();
   const tmp = '/tmp/afro-shop-db.json';
@@ -92,6 +97,11 @@ export async function readDB(): Promise<ShopDB> {
 }
 
 export async function writeDB(db: ShopDB): Promise<void> {
+  if (process.env.DATABASE_URL) {
+    await ensureShopSchema(seedProducts);
+    await saveShop(db);
+    return;
+  }
   cache = db;
   const target = cachePath ?? (await writablePath());
   cachePath = target;

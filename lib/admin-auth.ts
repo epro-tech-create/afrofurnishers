@@ -5,7 +5,7 @@ export const ADMIN_COOKIE = 'afro_admin';
 
 // Password source of truth (in order):
 //   1. ADMIN_PASSWORD env variable (recommended for production)
-//   2. Hash stored in data/shop-db.json (set on first boot or via change-password)
+//   2. Hash stored in the shop database (set on first boot or via change-password)
 //   3. First boot: a random password is generated, persisted and printed
 //      ONCE to the server console. It is NEVER shown in the UI.
 const ENV_PASSWORD = () => process.env.ADMIN_PASSWORD || '';
@@ -56,7 +56,7 @@ export async function getPasswordHash(): Promise<string> {
     sessions: db.admin?.sessions,
   };
   await writeDB(db);
-  console.log(`\n[afro-admin] No ADMIN_PASSWORD set — generated one (shown once, stored in data/shop-db.json):\n[afro-admin]   ${generated}\n`);
+  console.log(`\n[afro-admin] No ADMIN_PASSWORD set — generated one (shown once, stored in the shop database):\n[afro-admin]   ${generated}\n`);
   return db.admin.passwordHash;
 }
 
