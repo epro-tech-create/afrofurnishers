@@ -145,9 +145,12 @@ export function CheckoutPage() {
     return () => clearInterval(timer);
   }, [done]);
 
-  const detailsError = payAt === 'cod' && !form.address.trim()
-    ? 'Please enter your delivery address.'
-    : '';
+  const phoneOk = form.phone.replace(/\D/g, '').length >= 9;
+  const detailsError = !phoneOk
+    ? 'Enter the phone we should call.'
+    : payAt === 'cod' && !form.address.trim()
+      ? 'Please enter your delivery address.'
+      : '';
 
   function next() {
     setError('');
@@ -306,9 +309,12 @@ export function CheckoutPage() {
             <div className="form-grid">
               <div className="account-lock full">
                 <p className="eyebrow">SIGNED IN</p>
-                <p><strong>{customer.name}</strong><br />{customer.phone}</p>
+                <p><strong>{customer.name}</strong>{customer.email ? <><br />{customer.email}</> : null}</p>
                 <p className="muted">This account keeps your orders.</p>
               </div>
+              <label className="full">Phone number
+                <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required maxLength={20} placeholder="07XX XXX XXX" autoComplete="tel" inputMode="tel" />
+              </label>
               <label className="full">Delivery address<input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required maxLength={200} placeholder="Street, ward, landmark" autoComplete="street-address" /></label>
               <label>Area
                 <select value={form.area} onChange={e => setForm({ ...form, area: e.target.value })}>
@@ -468,7 +474,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
       <section className="page article track-page">
         <p className="eyebrow">TRACK ORDER</p>
         <h1>Sign in to track your furniture.</h1>
-        <p>Orders live on your account. Sign in with the phone you used at checkout.</p>
+        <p>Sign in with Google or your email to follow the order.</p>
         <AccountAuth />
       </section>
     );
@@ -478,7 +484,7 @@ export function OrderTrackPage({ initialId = '' }: { initialId?: string }) {
     <section className="page account-hub">
       <p className="eyebrow">TRACK ORDER</p>
       <h1>Where is my furniture?</h1>
-      <p className="signed-line">Signed in as <strong>{customer.name}</strong> · {customer.phone}</p>
+      <p className="signed-line">Signed in as <strong>{customer.name}</strong>{customer.email ? ` · ${customer.email}` : customer.phone ? ` · ${customer.phone}` : ''}</p>
       <form onSubmit={e => lookup(undefined, e)} className="track-search">
         <label>Order number
           <input value={id} onChange={e => setId(e.target.value)} placeholder="AFR-1001" />
@@ -605,7 +611,7 @@ export function OrdersDashboardPage() {
     <section className="page orders-page">
       <p className="eyebrow">MY ORDERS</p>
       <h1>Track everything you bought.</h1>
-      <p className="muted">Signed in as {customer.name} · {customer.phone}</p>
+      <p className="muted">Signed in as {customer.name}{customer.email ? ` · ${customer.email}` : ''}</p>
       <div className="buttons order-account-actions">
         <Link className="text-link" href="/account">Account</Link>
         <button type="button" className="text-link" onClick={() => logout()}>Sign out</button>
@@ -716,7 +722,7 @@ export function AccountPage() {
         <article className="hub-card">
           <p className="muted">Signed in as</p>
           <h2>{customer.name}</h2>
-          <p className="signed-line"><Phone size={15} /> {customer.phone}</p>
+          <p className="signed-line">{customer.phone ? <><Phone size={15} /> {customer.phone}</> : customer.email}</p>
           {latest ? (
             <div className="latest-order">
               <div>

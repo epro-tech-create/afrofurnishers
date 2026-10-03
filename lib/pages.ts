@@ -28,7 +28,7 @@ export const pages: Record<string, string[]> = {
   privacy: [
     'PRIVACY',
     'Your information.',
-    'When you create an account we store your name, phone number and a protected password so you can check out and track orders.',
+    'When you create an account we store your name and email so you can check out and track orders. Your delivery phone is saved with each order.',
     'We use those details to deliver furniture and to show you your own orders. We do not sell your information.',
   ],
 };

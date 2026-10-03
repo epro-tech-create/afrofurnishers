@@ -1962,7 +1962,10 @@ main { outline: none; }
 .account-auth { display: grid; gap: 14px; max-width: 520px; }
 .account-auth-lead { margin: 0; color: var(--ink); }
 .account-auth .form-grid { margin: 4px 0; }
-.account-auth .button { justify-self: start; }
+.account-auth .button { justify-self: stretch; width: 100%; }
+.account-auth .button-google { background: #fff; color: #111; border: 1px solid #111; }
+.auth-or { display: flex; align-items: center; gap: 12px; margin: 0; color: #444; font-size: 13px; }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: #e5e5e5; }
 .auth-switch { display: flex; gap: 8px; }
 .auth-switch button {
   min-height: 42px;

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, X } from 'lucide-react';
+import { authClient } from '@/lib/auth/client';
 import { products as staticProducts, money } from '@/lib/catalog';
 import type { ProductFull, PublicCustomer } from '@/lib/shop-types';
 
@@ -25,8 +26,7 @@ interface Store {
   notify: (text: string) => void;
   customer: PublicCustomer | null;
   customerReady: boolean;
-  signup: (input: { name: string; phone: string; password: string }) => Promise<PublicCustomer>;
-  login: (input: { phone: string; password: string }) => Promise<PublicCustomer>;
+  refreshCustomer: () => Promise<PublicCustomer | null>;
   logout: () => Promise<void>;
   count: number;
   subtotal: number;
@@ -114,31 +114,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch { /* session still works */ }
   }, [cart, wishlist, ready]);
 
-  const signup = useCallback(async (input: { name: string; phone: string; password: string }) => {
-    const res = await fetch('/api/account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'signup', ...input }),
-    });
+  const refreshCustomer = useCallback(async () => {
+    const res = await fetch('/api/account', { cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Could not create account');
-    setCustomer(data.customer);
-    return data.customer as PublicCustomer;
-  }, []);
-
-  const login = useCallback(async (input: { phone: string; password: string }) => {
-    const res = await fetch('/api/account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', ...input }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Could not sign in');
-    setCustomer(data.customer);
-    return data.customer as PublicCustomer;
+    const next = (data?.customer ?? null) as PublicCustomer | null;
+    setCustomer(next);
+    return next;
   }, []);
 
   const logout = useCallback(async () => {
+    try { await authClient.signOut(); } catch { /* clear the shop cookie either way */ }
     await fetch('/api/account', { method: 'DELETE' });
     setCustomer(null);
   }, []);
@@ -200,7 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { count: c, subtotal: s };
   }, [cart, products]);
 
-  const value: Store = { cart, wishlist, products, productsReady, ready, cartOpen, setCartOpen, add, change, setQty, remove, clear, toggle, notify, customer, customerReady, signup, login, logout, count, subtotal, productById };
+  const value: Store = { cart, wishlist, products, productsReady, ready, cartOpen, setCartOpen, add, change, setQty, remove, clear, toggle, notify, customer, customerReady, refreshCustomer, logout, count, subtotal, productById };
 
   return (
     <Context.Provider value={value}>

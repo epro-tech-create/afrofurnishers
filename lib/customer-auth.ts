@@ -85,6 +85,20 @@ function cookieValue(req: Request): string | null {
 }
 
 export async function getCustomer(req: Request): Promise<PublicCustomer | null> {
+  if (process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET) {
+    const { auth } = await import('./auth/server');
+    const { data } = await auth.getSession();
+    const user = data?.user;
+    if (user?.id && user.email) {
+      const name = (user.name || '').trim();
+      return {
+        id: user.id,
+        name: name && !name.includes('@') ? name : user.email.split('@')[0],
+        phone: '',
+        email: user.email,
+      };
+    }
+  }
   const id = await readSession(cookieValue(req));
   if (!id) return null;
   const db = await readDB();

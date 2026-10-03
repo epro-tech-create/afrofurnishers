@@ -85,7 +85,7 @@ export const t = {
   howTitle: 'A clear path to your furniture.',
   how: [
     { title: 'Browse the collection', text: 'Pick the room and pieces you like: sofas, tables, beds and more.' },
-    { title: 'Sign up to check out', text: 'Create an account with your name and phone, then add your address. Pay cash when the furniture arrives.' },
+    { title: 'Sign up to check out', text: 'Sign in with Google or your email, then add your address and phone. Pay cash when the furniture arrives.' },
     { title: 'Track your furniture', text: 'Sign in any time to follow the order from confirmation until it arrives.' },
   ],
   roomsEyebrow: 'SPACES',

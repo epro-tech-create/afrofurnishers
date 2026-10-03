@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const customer = await getCustomer(req);
   if (!customer) return NextResponse.json({ error: 'Sign in to see your orders' }, { status: 401 });
   const key = phoneKey(customer.phone);
-  const mine = db.orders.filter(o => o.customerId === customer.id || phoneKey(o.customer.phone) === key);
+  const mine = db.orders.filter(o => o.customerId === customer.id || (key.length >= 9 && phoneKey(o.customer.phone) === key));
   return NextResponse.json({ orders: mine.sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
 }
 
@@ -33,14 +33,16 @@ export async function POST(req: Request) {
 
   const itemsIn = Array.isArray(body.items) ? body.items : [];
   const customer = body.customer || {};
-  const name = admin ? String(customer.name || '').trim() : account!.name;
-  const phone = admin ? String(customer.phone || '').trim() : account!.phone;
+  const submittedName = String(customer.name || '').trim();
+  const submittedPhone = String(customer.phone || '').trim();
+  const name = admin ? submittedName : (account!.name || submittedName);
+  const phone = admin ? submittedPhone : (digits(submittedPhone).length >= 9 ? submittedPhone : account!.phone);
 
   if (!itemsIn.length) return NextResponse.json({ error: 'Your bag is empty' }, { status: 400 });
   if (itemsIn.length > 30) return NextResponse.json({ error: 'Too many pieces in one order' }, { status: 400 });
   if (admin && name.length < 2) return NextResponse.json({ error: 'Customer name is required' }, { status: 400 });
   if (name.length > 80) return NextResponse.json({ error: 'Name is too long' }, { status: 400 });
-  if (admin && digits(phone).length < 9) return NextResponse.json({ error: 'A valid customer phone is required' }, { status: 400 });
+  if (digits(phone).length < 9) return NextResponse.json({ error: 'A valid phone number is required so we can call about delivery.' }, { status: 400 });
   if (digits(phone).length > 15) return NextResponse.json({ error: 'Phone number is too long' }, { status: 400 });
   const address = String(customer.address || '').trim().slice(0, 200);
   if (!address) return NextResponse.json({ error: 'Delivery address is required' }, { status: 400 });

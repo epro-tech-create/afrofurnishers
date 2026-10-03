@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (await isAdminRequest(req)) return NextResponse.json({ order });
   const customer = await getCustomer(req);
   const owns = Boolean(
-    customer && (order.customerId === customer.id || phoneKey(order.customer.phone) === phoneKey(customer.phone)),
+    customer && (order.customerId === customer.id || (phoneKey(customer.phone).length >= 9 && phoneKey(order.customer.phone) === phoneKey(customer.phone))),
   );
   if (owns) return NextResponse.json({ order });
   return NextResponse.json({ error: 'Sign in with the account that placed this order.' }, { status: 401 });

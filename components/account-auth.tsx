@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { authClient } from '@/lib/auth/client';
 import { useStore } from './store';
+
+function message(error: { message?: string } | null): string {
+  return error?.message || 'Something went wrong';
+}
 
 export function AccountAuth({
   onDone,
@@ -10,57 +15,99 @@ export function AccountAuth({
   onDone?: () => void;
   intro?: string;
 }) {
-  const { signup, login } = useStore();
-  const [mode, setMode] = useState<'signup' | 'login'>('signup');
+  const { refreshCustomer } = useStore();
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  async function submit(e: FormEvent) {
+  async function google() {
+    setError('');
+    setBusy(true);
+    const { error: authError } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: window.location.href,
+    });
+    if (authError) {
+      setError(message(authError));
+      setBusy(false);
+    }
+  }
+
+  async function sendCode(e?: FormEvent) {
+    e?.preventDefault();
+    setError('');
+    if (name.trim().length < 2) {
+      setError('Enter your name.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error: authError } = await authClient.emailOtp.sendVerificationOtp({
+        email: email.trim(),
+        type: 'sign-in',
+      });
+      if (authError) throw new Error(message(authError));
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send the code');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verify(e: FormEvent) {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      if (mode === 'signup') await signup({ name, phone, password });
-      else await login({ phone, password });
+      const { error: authError } = await authClient.signIn.emailOtp({
+        email: email.trim(),
+        otp: code.trim(),
+        name: name.trim(),
+      });
+      if (authError) throw new Error(message(authError));
+      await refreshCustomer();
       onDone?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'That code did not work');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <form className="account-auth" onSubmit={submit}>
+    <form className="account-auth" onSubmit={sent ? verify : sendCode}>
       {intro ? <p className="account-auth-lead">{intro}</p> : null}
-      <div className="auth-switch" role="tablist" aria-label="Account">
-        <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setError(''); }}>
-          Create account
-        </button>
-        <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError(''); }}>
-          Sign in
-        </button>
-      </div>
+      <button type="button" className="button button-google" disabled={busy} onClick={google}>
+        Continue with Google
+      </button>
+      <p className="auth-or">or use email</p>
       <div className="form-grid">
-        {mode === 'signup' && (
-          <label className="full">Full name
-            <input value={name} onChange={e => setName(e.target.value)} required maxLength={80} placeholder="e.g. Neema John" autoComplete="name" />
+        <label className="full">Full name
+          <input value={name} onChange={e => setName(e.target.value)} required maxLength={80} placeholder="e.g. Neema John" autoComplete="name" />
+        </label>
+        <label className="full">Email
+          <input value={email} onChange={e => setEmail(e.target.value)} required maxLength={120} type="email" placeholder="you@email.com" autoComplete="email" />
+        </label>
+        {sent && (
+          <label className="full">Code from your email
+            <input value={code} onChange={e => setCode(e.target.value)} required maxLength={8} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" />
           </label>
         )}
-        <label className="full">Phone number
-          <input value={phone} onChange={e => setPhone(e.target.value)} required maxLength={20} placeholder="07XX XXX XXX" autoComplete="tel" inputMode="tel" />
-        </label>
-        <label className="full">Password
-          <input value={password} onChange={e => setPassword(e.target.value)} required minLength={6} maxLength={72} type="password" placeholder={mode === 'signup' ? 'At least 6 characters' : 'Your password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
-        </label>
       </div>
+      {sent && <p className="muted">We sent a code to {email}. It expires in 15 minutes.</p>}
       {error && <p role="alert" className="form-error">{error}</p>}
       <button className="button" disabled={busy}>
-        {busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+        {busy ? 'Please wait…' : sent ? 'Sign in' : 'Send code'}
       </button>
+      {sent && (
+        <button type="button" className="text-link" disabled={busy} onClick={() => sendCode()}>
+          Send a new code
+        </button>
+      )}
     </form>
   );
 }
