@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { isAdminRequest, isPasswordSetViaEnv } from '@/lib/admin-auth';
+import { clientIp, isAdminRequest, isPasswordSetViaEnv } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { readDB, writeDB } from '@/lib/db';
 import type { AdminProfile } from '@/lib/shop-types';
 
@@ -41,5 +42,6 @@ export async function PATCH(req: Request) {
     sessions: db.admin?.sessions,
   };
   await writeDB(db);
+  await recordAudit({ actor: 'workshop', action: 'profile.updated', target: name, ip: clientIp(req) });
   return NextResponse.json({ profile });
 }

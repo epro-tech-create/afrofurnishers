@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { clientIp, isAdminRequest } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { saveProductPhoto } from '@/lib/save-product-photo';
 
 export async function GET(req: Request) {
@@ -58,5 +59,6 @@ export async function POST(req: Request) {
   };
   db.products.unshift(product);
   await writeDB(db);
+  await recordAudit({ actor: 'workshop', action: 'product.created', target: product.id, detail: product.name, ip: clientIp(req) });
   return NextResponse.json({ product }, { status: 201 });
 }

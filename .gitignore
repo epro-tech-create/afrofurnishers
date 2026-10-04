@@ -5,6 +5,8 @@ out/
 .env*.local
 next-env.d.ts
 data/shop-db.json
+data/superadmin.json
+data/audit-log.json
 public/uploads/
 
 .vercel

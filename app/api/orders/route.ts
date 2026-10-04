@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { nextOrderId, readDB, writeDB } from '@/lib/db';
 import { deliveryFeeFor, type Order, type OrderItem } from '@/lib/shop-types';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { clientIp, isAdminRequest } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { findCustomerByPhone, getCustomer, phoneKey } from '@/lib/customer-auth';
 
 const digits = (s: string) => s.replace(/\D/g, '');
@@ -103,5 +104,12 @@ export async function POST(req: Request) {
   }
   db.orders.unshift(order);
   await writeDB(db);
+  await recordAudit({
+    actor: admin ? 'workshop' : 'customer',
+    action: 'order.created',
+    target: order.id,
+    detail: `${order.source} · ${order.customer.name} · TZS ${order.total}`,
+    ip: clientIp(req),
+  });
   return NextResponse.json({ order }, { status: 201 });
 }

@@ -98,6 +98,17 @@ create table if not exists app_state (
   admin jsonb
 );
 insert into app_state (id) values (1) on conflict (id) do nothing;
+alter table app_state add column if not exists superadmin jsonb;
+create table if not exists audit_logs (
+  id bigint generated always as identity primary key,
+  at timestamptz not null default now(),
+  actor text not null,
+  action text not null,
+  target text not null default '',
+  detail text not null default '',
+  ip text not null default ''
+);
+create index if not exists audit_logs_at_idx on audit_logs (at desc);
 create index if not exists orders_created_at_idx on orders (created_at desc);
 create index if not exists orders_status_idx on orders (status);
 create index if not exists order_items_order_id_idx on order_items (order_id);
@@ -429,4 +440,71 @@ export async function saveShop(db: ShopRecord): Promise<void> {
   } finally {
     client.release();
   }
+}
+
+export type SuperadminState = {
+  passwordHash: string;
+  updatedAt: string;
+  sessions: { hash: string; expiresAt: number }[];
+};
+
+function asSuperadmin(raw: unknown): SuperadminState | null {
+  let value = raw;
+  if (typeof value === 'string') {
+    try { value = JSON.parse(value); } catch { return null; }
+  }
+  if (!value || typeof value !== 'object') return null;
+  const row = value as SuperadminState;
+  if (typeof row.passwordHash !== 'string' || !row.passwordHash) return null;
+  return {
+    passwordHash: row.passwordHash,
+    updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : new Date().toISOString(),
+    sessions: Array.isArray(row.sessions) ? row.sessions.filter(s => s && typeof s.hash === 'string' && typeof s.expiresAt === 'number') : [],
+  };
+}
+
+export async function loadSuperadminState(): Promise<SuperadminState | null> {
+  const result = await pool().query('select superadmin from app_state where id = 1');
+  return asSuperadmin(result.rows[0]?.superadmin);
+}
+
+export async function saveSuperadminState(state: SuperadminState): Promise<void> {
+  await pool().query(
+    `insert into app_state (id, superadmin) values (1, $1::jsonb)
+     on conflict (id) do update set superadmin = excluded.superadmin`,
+    [JSON.stringify(state)],
+  );
+}
+
+export async function appendAudit(row: { actor: string; action: string; target: string; detail: string; ip: string }): Promise<void> {
+  await pool().query(
+    `insert into audit_logs (actor, action, target, detail, ip) values ($1,$2,$3,$4,$5)`,
+    [row.actor, row.action, row.target, row.detail, row.ip],
+  );
+}
+
+export async function queryAudit(limit: number, before: string, q: string): Promise<{ id: string; at: string; actor: string; action: string; target: string; detail: string; ip: string }[]> {
+  const result = await pool().query(
+    `select id::text as id, at, actor, action, target, detail, ip
+     from audit_logs
+     where ($1::bigint is null or id < $1::bigint)
+       and ($2::text = '' or position(lower($2) in lower(actor || ' ' || action || ' ' || target || ' ' || detail || ' ' || ip)) > 0)
+     order by id desc
+     limit $3`,
+    [before || null, q, limit],
+  );
+  return result.rows.map(row => ({
+    id: String(row.id),
+    at: iso(row.at),
+    actor: String(row.actor || ''),
+    action: String(row.action || ''),
+    target: String(row.target || ''),
+    detail: String(row.detail || ''),
+    ip: String(row.ip || ''),
+  }));
+}
+
+export async function countAudit(): Promise<number> {
+  const result = await pool().query('select count(*)::int as n from audit_logs');
+  return num(result.rows[0]?.n);
 }

@@ -31,7 +31,7 @@ function legacyHash(pw: string): string {
   return createHash('sha256').update(`afro-admin-v1:${pw}`).digest('hex');
 }
 
-function checkStored(password: string, stored: string): boolean {
+export function passwordMatches(password: string, stored: string): boolean {
   if (stored.startsWith('scrypt$')) {
     const [, salt, hash] = stored.split('$');
     if (!salt || !hash) return false;
@@ -78,7 +78,7 @@ export async function verifyPassword(password: string): Promise<boolean> {
     await getPasswordHash();
     return false;
   }
-  const ok = checkStored(password, stored);
+  const ok = passwordMatches(password, stored);
   if (ok && !stored.startsWith('scrypt$') && db.admin) {
     db.admin.passwordHash = hashPassword(password);
     db.admin.updatedAt = new Date().toISOString();

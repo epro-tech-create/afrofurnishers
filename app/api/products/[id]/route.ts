@@ -2,7 +2,8 @@ import { unlink } from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { clientIp, isAdminRequest } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { saveProductPhoto } from '@/lib/save-product-photo';
 
 async function removeUploadedPhoto(image: string) {
@@ -47,6 +48,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   updated.updatedAt = new Date().toISOString();
   db.products[i] = updated;
   await writeDB(db);
+  await recordAudit({ actor: 'workshop', action: 'product.updated', target: updated.id, detail: `${updated.name} · stock ${updated.stock}`, ip: clientIp(req) });
   return NextResponse.json({ product: updated });
 }
 
@@ -59,5 +61,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const [removed] = db.products.splice(i, 1);
   await removeUploadedPhoto(removed.image);
   await writeDB(db);
+  await recordAudit({ actor: 'workshop', action: 'product.deleted', target: removed.id, detail: removed.name, ip: clientIp(req) });
   return NextResponse.json({ ok: true });
 }

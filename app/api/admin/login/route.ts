@@ -12,6 +12,7 @@ import {
   hashPassword,
   verifyPassword,
 } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { readDB, writeDB } from '@/lib/db';
 
 export async function GET(req: Request) {
@@ -28,8 +29,10 @@ export async function POST(req: Request) {
   const ok = password.length > 0 && (await verifyPassword(password));
   recordLoginAttempt(ip, ok);
   if (!ok) {
+    await recordAudit({ actor: 'workshop', action: 'login.failed', ip, detail: 'Wrong workshop password' });
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }
+  await recordAudit({ actor: 'workshop', action: 'login', ip });
   const token = await issueAdminSession();
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', adminCookieHeader(token));
@@ -54,6 +57,7 @@ export async function PATCH(req: Request) {
     sessions: [],
   };
   await writeDB(db);
+  await recordAudit({ actor: 'workshop', action: 'password.changed', ip: clientIp(req) });
   const token = await issueAdminSession();
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', adminCookieHeader(token));
@@ -61,6 +65,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (await isAdminRequest(req)) await recordAudit({ actor: 'workshop', action: 'logout', ip: clientIp(req) });
   await revokeAdminSession(req);
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', clearAdminCookieHeader());

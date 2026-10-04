@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
 import { ORDER_STATUSES, type OrderStatus, type PaymentStatus } from '@/lib/shop-types';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { clientIp, isAdminRequest } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { getCustomer, phoneKey } from '@/lib/customer-auth';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -46,5 +47,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   order.updatedAt = new Date().toISOString();
   db.orders[i] = order;
   await writeDB(db);
+  await recordAudit({
+    actor: 'workshop',
+    action: 'order.updated',
+    target: order.id,
+    detail: `${order.status} · ${order.paymentStatus}`,
+    ip: clientIp(req),
+  });
   return NextResponse.json({ order });
 }

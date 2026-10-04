@@ -200,6 +200,7 @@ function ShellSkip() {
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return <>{children}</>;
+  if (pathname === '/superadmin' || pathname.startsWith('/superadmin/')) return <>{children}</>;
   return (
     <MotionConfig reducedMotion="user">
       <PrefsProvider>
