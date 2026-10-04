@@ -73,11 +73,31 @@
 .super-app .health span { border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
 .super-app .on { color: var(--orange); }
 .super-app .scroll { overflow: auto; }
+.super-app .chip {
+  border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 12px;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.03em;
+}
+.super-app .chip.on { background: #111; color: #fff; border-color: #111; }
+.super-app .ranks { display: grid; gap: 12px; }
+.super-app .rank { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; }
+.super-app .rank small { display: block; color: var(--soft); font-size: 12px; }
+.super-app .rank i { grid-column: 1 / -1; display: block; height: 8px; background: var(--orange); border-radius: 999px; }
+.super-app .feed { display: grid; }
+.super-app .feed-row {
+  display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.super-app .when { display: grid; }
+.super-app .when b { font-size: 14px; }
+.super-app .when span, .super-app .ip { color: var(--soft); font-size: 12px; }
+.super-app .ip { font-family: ui-monospace, monospace; }
 .super-app .password-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
 @media (max-width: 900px) {
   .super-app .shell { grid-template-columns: 1fr; }
   .super-app .side { position: static; height: auto; }
   .super-app .side nav { grid-template-columns: repeat(3, 1fr); }
   .super-app .stats, .super-app .grid-2, .super-app .password-row { grid-template-columns: 1fr; }
+  .super-app .feed-row { grid-template-columns: 64px 1fr; }
+  .super-app .feed-row .ip, .super-app .feed-row .pill { justify-self: start; }
   .super-app .main { padding: 18px 14px 40px; }
 }

@@ -112,6 +112,7 @@ create index if not exists audit_logs_at_idx on audit_logs (at desc);
 create index if not exists orders_created_at_idx on orders (created_at desc);
 create index if not exists orders_status_idx on orders (status);
 create index if not exists order_items_order_id_idx on order_items (order_id);
+alter table visits add column if not exists ip text not null default '';
 create index if not exists visits_created_at_idx on visits (created_at desc);
 `;
 
@@ -289,6 +290,7 @@ export async function loadShop(): Promise<ShopRecord> {
         createdAt: iso(row.created_at),
       };
       if (row.referrer) visit.referrer = row.referrer;
+      if (row.ip) visit.ip = row.ip;
       return visit;
     }),
     customers: customers.rows.map(row => ({
@@ -408,10 +410,10 @@ export async function saveShop(db: ShopRecord): Promise<void> {
     });
     await changedRows(client, 'visits', db.visits, previous?.visits, async (c, row) => {
       await c.query(
-        `insert into visits (id, visitor_id, path, referrer, created_at)
-         values ($1,$2,$3,$4,$5)
-         on conflict (id) do update set visitor_id = excluded.visitor_id, path = excluded.path, referrer = excluded.referrer, created_at = excluded.created_at`,
-        [row.id, row.visitorId, row.path, row.referrer || '', row.createdAt],
+        `insert into visits (id, visitor_id, path, referrer, ip, created_at)
+         values ($1,$2,$3,$4,$5,$6)
+         on conflict (id) do update set visitor_id = excluded.visitor_id, path = excluded.path, referrer = excluded.referrer, ip = excluded.ip, created_at = excluded.created_at`,
+        [row.id, row.visitorId, row.path, row.referrer || '', row.ip || '', row.createdAt],
       );
     });
 
@@ -483,15 +485,22 @@ export async function appendAudit(row: { actor: string; action: string; target: 
   );
 }
 
-export async function queryAudit(limit: number, before: string, q: string): Promise<{ id: string; at: string; actor: string; action: string; target: string; detail: string; ip: string }[]> {
+export async function queryAudit(limit: number, before: string, q: string, kind: string): Promise<{ id: string; at: string; actor: string; action: string; target: string; detail: string; ip: string }[]> {
   const result = await pool().query(
     `select id::text as id, at, actor, action, target, detail, ip
      from audit_logs
      where ($1::bigint is null or id < $1::bigint)
        and ($2::text = '' or position(lower($2) in lower(actor || ' ' || action || ' ' || target || ' ' || detail || ' ' || ip)) > 0)
+       and (
+         $4::text = 'all'
+         or ($4 = 'pages' and action = 'page.viewed')
+         or ($4 = 'signin' and action ~ '(login|signin|signout|password|code_sent|account)')
+         or ($4 = 'shop' and action ~ '^(order|product|contact|profile)\\.')
+         or ($4 = 'notable' and action <> 'page.viewed')
+       )
      order by id desc
      limit $3`,
-    [before || null, q, limit],
+    [before || null, q, limit, kind || 'all'],
   );
   return result.rows.map(row => ({
     id: String(row.id),

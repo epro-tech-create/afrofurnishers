@@ -126,13 +126,14 @@ export function nextOrderId(orders: Order[]): string {
 
 const MAX_VISITS = 20000;
 
-export async function addVisit(input: { visitorId: string; path: string; referrer?: string }): Promise<void> {
+export async function addVisit(input: { visitorId: string; path: string; referrer?: string; ip?: string }): Promise<void> {
   const db = await readDB();
   db.visits.push({
     id: randomUUID(),
     visitorId: input.visitorId,
     path: input.path,
     referrer: input.referrer,
+    ip: input.ip || '',
     createdAt: new Date().toISOString(),
   });
   if (db.visits.length > MAX_VISITS) db.visits.splice(0, db.visits.length - MAX_VISITS);

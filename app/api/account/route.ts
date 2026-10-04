@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { clientIp, tooMany } from '@/lib/admin-auth';
+import { clientIp, deviceFrom, tooMany } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import {
   clearCustomerCookieHeader,
   createCustomer,
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
     if (digits(phone).length < 9) return NextResponse.json({ error: 'Enter a valid phone number.' }, { status: 400 });
     try {
       const customer = await createCustomer({ name, phone, password });
+      await recordAudit({ actor: 'customer', action: 'account.signup', target: customer.name, detail: deviceFrom(req), ip });
       const res = NextResponse.json({ customer });
       res.headers.set('Set-Cookie', await customerCookieHeader(customer.id));
       return res;
@@ -64,15 +66,19 @@ export async function POST(req: Request) {
   const ok = Boolean(account && verifyCustomerPassword(password, account.passwordHash));
   recordCustomerLogin(ip, ok);
   if (!account || !ok) {
+    await recordAudit({ actor: 'customer', action: 'login.failed', detail: `Phone sign-in · ${deviceFrom(req)}`, ip });
     return NextResponse.json({ error: 'Phone or password is incorrect.' }, { status: 401 });
   }
+  await recordAudit({ actor: 'customer', action: 'account.login', target: account.name, detail: deviceFrom(req), ip });
   const customer = toPublicCustomer(account);
   const res = NextResponse.json({ customer });
   res.headers.set('Set-Cookie', await customerCookieHeader(customer.id));
   return res;
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  const customer = await getCustomer(req);
+  if (customer) await recordAudit({ actor: 'customer', action: 'account.logout', target: customer.name, detail: deviceFrom(req), ip: clientIp(req) });
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', clearCustomerCookieHeader());
   return res;

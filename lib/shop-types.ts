@@ -122,6 +122,7 @@ export interface Visit {
   visitorId: string;
   path: string;
   referrer?: string;
+  ip?: string;
   createdAt: string;
 }
 

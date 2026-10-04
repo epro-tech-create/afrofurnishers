@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { clientIp, tooMany } from '@/lib/admin-auth';
+import { recordAudit } from '@/lib/audit';
 import { addVisit } from '@/lib/db';
 
 // Public hit endpoint — called by <VisitTracker /> on every page view.
@@ -12,8 +13,10 @@ export async function POST(req: Request) {
     const referrer = body?.referrer ? String(body.referrer).slice(0, 300) : undefined;
     if (!path.startsWith('/') || path.includes('..') || !visitorId) return NextResponse.json({ ok: false }, { status: 400 });
     if (path.startsWith('/api/')) return NextResponse.json({ ok: true });
-    if (tooMany(`visit:${clientIp(req)}`, 60, 60 * 1000)) return NextResponse.json({ ok: true });
-    await addVisit({ visitorId, path, referrer });
+    const ip = clientIp(req);
+    if (tooMany(`visit:${ip}`, 60, 60 * 1000)) return NextResponse.json({ ok: true });
+    await addVisit({ visitorId, path, referrer, ip });
+    await recordAudit({ actor: 'visitor', action: 'page.viewed', target: path, detail: referrer || '', ip });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });

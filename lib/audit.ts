@@ -63,13 +63,14 @@ export async function recordAudit(event: {
   }
 }
 
-export async function listAudit(options: { limit?: number; before?: string; q?: string }): Promise<AuditRow[]> {
+export async function listAudit(options: { limit?: number; before?: string; q?: string; kind?: string }): Promise<AuditRow[]> {
   const limit = Math.max(1, Math.min(100, options.limit || 40));
   const q = clip(options.q || '', 80).toLowerCase();
   const before = options.before || '';
+  const kind = options.kind || 'all';
   if (process.env.DATABASE_URL) {
     await ensureShopSchema();
-    return queryAudit(limit, before, q);
+    return queryAudit(limit, before, q, options.kind || 'all');
   }
   let rows = (await readFileLog()).slice().reverse();
   if (before) {
@@ -79,6 +80,10 @@ export async function listAudit(options: { limit?: number; before?: string; q?: 
   if (q) {
     rows = rows.filter(row => `${row.actor} ${row.action} ${row.target} ${row.detail} ${row.ip}`.toLowerCase().includes(q));
   }
+  if (kind === 'pages') rows = rows.filter(row => row.action === 'page.viewed');
+  if (kind === 'signin') rows = rows.filter(row => /(login|signin|signout|password|code_sent|account)/.test(row.action));
+  if (kind === 'shop') rows = rows.filter(row => /^(order|product|contact|profile)\./.test(row.action));
+  if (kind === 'notable') rows = rows.filter(row => row.action !== 'page.viewed');
   return rows.slice(0, limit);
 }
 

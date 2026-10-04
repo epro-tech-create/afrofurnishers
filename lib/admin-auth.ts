@@ -169,6 +169,11 @@ let globalReset = 0;
  */
 export function clientIp(req: Request): string {
   if (process.env.TRUST_PROXY === '1') {
+    const vercel = req.headers.get('x-vercel-forwarded-for');
+    if (vercel) {
+      const first = vercel.split(',')[0]?.trim();
+      if (first) return first.slice(0, 64);
+    }
     const real = req.headers.get('x-real-ip');
     if (real) return real.trim().slice(0, 64);
     const fwd = req.headers.get('x-forwarded-for');
@@ -179,6 +184,14 @@ export function clientIp(req: Request): string {
     }
   }
   return 'direct';
+}
+
+/** Short browser and device label from the request. Never includes the raw header. */
+export function deviceFrom(req: Request): string {
+  const ua = req.headers.get('user-agent') || '';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iPhone' : /Mac OS/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'unknown device';
+  return `${browser} on ${os}`;
 }
 
 export function loginBlocked(ip: string): boolean {

@@ -34,6 +34,10 @@ export function SuperadminApp() {
   const [report, setReport] = useState<SuperadminReport | null>(null);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [auditQ, setAuditQ] = useState('');
+  const [auditKind, setAuditKind] = useState('all');
+  const [visitQ, setVisitQ] = useState('');
+  const [visitRange, setVisitRange] = useState<'today' | '7' | '30' | 'all'>('today');
+  const [visitSource, setVisitSource] = useState('all');
   const [orderStatus, setOrderStatus] = useState('all');
   const [currentPw, setCurrentPw] = useState('');
   const [nextPw, setNextPw] = useState('');
@@ -96,8 +100,8 @@ export function SuperadminApp() {
     setReport(null);
   }
 
-  async function loadAudit(before = '') {
-    const params = new URLSearchParams({ limit: '50', q: auditQ });
+  async function loadAudit(before = '', kind = auditKind, q = auditQ) {
+    const params = new URLSearchParams({ limit: '60', q, kind });
     if (before) params.set('before', before);
     const res = await fetch(`/api/superadmin/audit?${params}`, { cache: 'no-store' });
     if (!res.ok) return;
@@ -123,6 +127,28 @@ export function SuperadminApp() {
     setNextPw('');
     setNotice('Password updated.');
   }
+
+  const filteredVisits = useMemo(() => {
+    if (!report) return [];
+    const now = Date.now();
+    const today = new Date().toISOString().slice(0, 10);
+    const q = visitQ.trim().toLowerCase();
+    return report.visits.filter(visit => {
+      if (visitRange === 'today' && visit.at.slice(0, 10) !== today) return false;
+      if (visitRange === '7' && new Date(visit.at).getTime() < now - 7 * 86400000) return false;
+      if (visitRange === '30' && new Date(visit.at).getTime() < now - 30 * 86400000) return false;
+      const source = sourceOf(visit.referrer);
+      if (visitSource !== 'all' && source.key !== visitSource) return false;
+      if (q && !`${visit.path} ${visit.ip} ${source.label} ${pageName(visit.path)}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [report, visitQ, visitRange, visitSource]);
+
+  const rankedPages = useMemo(() => {
+    const pages = new Map<string, number>();
+    for (const visit of filteredVisits) pages.set(visit.path, (pages.get(visit.path) || 0) + 1);
+    return [...pages.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [filteredVisits]);
 
   const orders = useMemo(() => {
     if (!report) return [];
@@ -166,7 +192,7 @@ export function SuperadminApp() {
           </div>
           <nav>
             {TABS.map(item => (
-              <button key={item.id} type="button" className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}>{item.label}</button>
+              <button key={item.id} type="button" className={tab === item.id ? 'active' : ''} onClick={() => { setTab(item.id); if (item.id === 'audit') loadAudit('', auditKind, auditQ); }}>{item.label}</button>
             ))}
           </nav>
           <button className="btn signout" type="button" onClick={signOut}>Sign out</button>
@@ -278,9 +304,9 @@ export function SuperadminApp() {
                         <td>{order.name}<br /><span className="muted">{order.phone}</span></td>
                         <td>{order.area}</td>
                         <td>{money(order.total)}</td>
-                        <td><span className="pill">{order.status}</span></td>
-                        <td>{order.paymentStatus} · {order.payment}</td>
-                        <td>{order.source}</td>
+                        <td><span className="pill">{titleCase(order.status)}</span></td>
+                        <td>{order.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'} · {order.payment === 'shop' ? 'Showroom' : 'Delivery'}</td>
+                        <td>{titleCase(order.source)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -341,43 +367,80 @@ export function SuperadminApp() {
           )}
 
           {report && tab === 'visits' && (
-            <div className="grid-2">
-              <section className="panel">
-                <h2>Traffic</h2>
-                <p className="muted">{report.counts.visits} views · {report.counts.visitsToday} today · {report.counts.unique7d} people in 7 days</p>
-                <table>
-                  <tbody>
-                    {report.topPages.map(page => (
-                      <tr key={page.path}><td>{page.path}</td><td>{page.views}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-                {report.topPages.length === 0 && <p className="muted">No visits recorded yet.</p>}
+            <>
+              <div className="filters">
+                <input value={visitQ} onChange={e => setVisitQ(e.target.value)} placeholder="Search page or IP" aria-label="Search visits" />
+                {(['today', '7', '30', 'all'] as const).map(range => (
+                  <button key={range} type="button" className={`chip ${visitRange === range ? 'on' : ''}`} onClick={() => setVisitRange(range)}>
+                    {range === 'today' ? 'Today' : range === '7' ? '7 days' : range === '30' ? '30 days' : 'All'}
+                  </button>
+                ))}
+                {(['all', 'direct', 'google', 'site', 'vercel', 'other'] as const).map(source => (
+                  <button key={source} type="button" className={`chip ${visitSource === source ? 'on' : ''}`} onClick={() => setVisitSource(source)}>
+                    {source === 'all' ? 'Any source' : source === 'site' ? 'This site' : titleCase(source)}
+                  </button>
+                ))}
+              </div>
+              <section className="stats">
+                <article className="stat"><span>Showing</span><strong>{filteredVisits.length}</strong></article>
+                <article className="stat"><span>Today</span><strong>{report.counts.visitsToday}</strong></article>
+                <article className="stat"><span>People in 7 days</span><strong>{report.counts.unique7d}</strong></article>
+                <article className="stat"><span>All views</span><strong>{report.counts.visits}</strong></article>
               </section>
-              <section className="panel">
-                <h2>Recent pages</h2>
-                <table>
-                  <tbody>
-                    {report.visits.map((visit, index) => (
-                      <tr key={`${visit.at}-${index}`}><td>{when(visit.at)}</td><td>{visit.path}</td><td className="muted">{visit.referrer || visit.visitor}</td></tr>
+              <div className="grid-2">
+                <section className="panel">
+                  <h2>Popular pages</h2>
+                  {rankedPages.length === 0 && <p className="muted">Nothing matches this filter.</p>}
+                  <div className="ranks">
+                    {rankedPages.map(([path, views]) => (
+                      <div key={path} className="rank">
+                        <div><strong>{pageName(path)}</strong><small>{path}</small></div>
+                        <b>{views}</b>
+                        <i style={{ width: `${Math.max(8, (views / rankedPages[0][1]) * 100)}%` }} />
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </section>
-            </div>
+                  </div>
+                </section>
+                <section className="panel">
+                  <h2>Who came in</h2>
+                  <div className="feed">
+                    {filteredVisits.slice(0, 40).map((visit, index) => {
+                      const source = sourceOf(visit.referrer);
+                      const time = clock(visit.at);
+                      return (
+                        <article key={`${visit.at}-${visit.path}-${index}`} className="feed-row">
+                          <div className="when"><b>{time.time}</b><span>{time.day}</span></div>
+                          <div>
+                            <strong>{pageName(visit.path)}</strong>
+                            <p className="muted">From {source.label} · {deviceIp(visit.ip)}</p>
+                          </div>
+                          <span className="pill">{source.label}</span>
+                        </article>
+                      );
+                    })}
+                  </div>
+                  {filteredVisits.length === 0 && <p className="muted">No visits for this filter. Older visits have no device IP until the next page view.</p>}
+                </section>
+              </div>
+            </>
           )}
 
           {report && tab === 'audit' && (
             <section className="panel">
-              <form className="filters" onSubmit={event => { event.preventDefault(); loadAudit(); }}>
-                <input value={auditQ} onChange={e => setAuditQ(e.target.value)} placeholder="Search actor, action, order" aria-label="Search audit log" />
+              <form className="filters" onSubmit={event => { event.preventDefault(); loadAudit('', auditKind, auditQ); }}>
+                {(['all', 'signin', 'shop', 'pages'] as const).map(kind => (
+                  <button key={kind} type="button" className={`chip ${auditKind === kind ? 'on' : ''}`} onClick={() => { setAuditKind(kind); loadAudit('', kind, auditQ); }}>
+                    {kind === 'all' ? 'Everything' : kind === 'signin' ? 'Sign-ins' : kind === 'shop' ? 'Shop changes' : 'Page views'}
+                  </button>
+                ))}
+                <input value={auditQ} onChange={e => setAuditQ(e.target.value)} placeholder="Search name, order, or IP" aria-label="Search audit log" />
                 <button className="btn btn-primary" type="submit">Search</button>
               </form>
               <AuditTable rows={audit} />
               {audit.length > 0 && (
                 <button className="btn btn-ghost" type="button" onClick={() => loadAudit(audit[audit.length - 1].id)}>Older</button>
               )}
-              {audit.length === 0 && <p className="muted">No audit events yet. Sign-ins, orders, products, and customer changes show up here.</p>}
+              {audit.length === 0 && <p className="muted">Nothing in this view yet.</p>}
             </section>
           )}
         </main>
@@ -389,22 +452,96 @@ export function SuperadminApp() {
 function AuditTable({ rows }: { rows: AuditRow[] }) {
   if (!rows.length) return null;
   return (
-    <div className="scroll">
-      <table>
-        <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
-        <tbody>
-          {rows.map(row => (
-            <tr key={row.id}>
-              <td>{when(row.at)}</td>
-              <td>{row.actor}</td>
-              <td>{row.action}</td>
-              <td>{row.target}</td>
-              <td>{row.detail}</td>
-              <td>{row.ip}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="feed">
+      {rows.map(row => {
+        const time = clock(row.at);
+        const text = describeAudit(row);
+        return (
+          <article key={row.id} className="feed-row">
+            <div className="when"><b>{time.time}</b><span>{time.day}</span></div>
+            <div>
+              <strong>{text.title}</strong>
+              {text.detail && <p className="muted">{text.detail}</p>}
+            </div>
+            <span className="ip">{deviceIp(row.ip)}</span>
+          </article>
+        );
+      })}
     </div>
   );
+}
+
+function titleCase(value: string) {
+  return value.replace(/[_-]/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function pageName(path: string) {
+  if (path === '/') return 'Home';
+  const names: Record<string, string> = {
+    '/shop': 'Shop',
+    '/account': 'Account',
+    '/checkout': 'Checkout',
+    '/orders': 'My orders',
+    '/cart': 'Bag',
+    '/about': 'About',
+    '/contact': 'Contact',
+  };
+  return names[path] || path;
+}
+
+function sourceOf(referrer: string): { key: string; label: string } {
+  if (!referrer) return { key: 'direct', label: 'Direct' };
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, '');
+    if (host.endsWith('afrofurnishers.com')) return { key: 'site', label: 'This site' };
+    if (host.includes('google')) return { key: 'google', label: 'Google' };
+    if (host.includes('vercel')) return { key: 'vercel', label: 'Vercel' };
+    return { key: 'other', label: host };
+  } catch {
+    return { key: 'other', label: 'Other' };
+  }
+}
+
+function deviceIp(ip: string) {
+  if (!ip || ip === 'direct') return 'IP not captured';
+  return ip;
+}
+
+function clock(iso: string) {
+  const date = new Date(iso);
+  return {
+    day: date.toLocaleDateString('en-GB', { timeZone: 'Africa/Dar_es_Salaam', day: '2-digit', month: 'short' }),
+    time: date.toLocaleTimeString('en-GB', { timeZone: 'Africa/Dar_es_Salaam', hour: '2-digit', minute: '2-digit', hour12: false }),
+  };
+}
+
+function describeAudit(row: AuditRow): { title: string; detail: string } {
+  const titles: Record<string, string> = {
+    login: 'Signed in',
+    'login.failed': 'Sign-in failed',
+    logout: 'Signed out',
+    'password.changed': 'Changed password',
+    'profile.updated': 'Updated profile',
+    'order.created': 'Placed an order',
+    'order.updated': 'Updated an order',
+    'product.created': 'Added a product',
+    'product.updated': 'Edited a product',
+    'product.deleted': 'Removed a product',
+    'contact.created': 'Added a contact',
+    'contact.updated': 'Edited a contact',
+    'contact.removed': 'Removed a contact',
+    'page.viewed': 'Opened a page',
+    'customer.signin': 'Signed in',
+    'customer.signin_failed': 'Sign-in failed',
+    'customer.code_sent': 'Requested an email code',
+    'customer.signout': 'Signed out',
+    'account.signup': 'Created an account',
+    'account.login': 'Signed in',
+    'account.logout': 'Signed out',
+    'superadmin.seeded': 'Stored the super admin password',
+  };
+  const who = row.actor === 'workshop' ? 'Workshop' : row.actor === 'superadmin' ? 'Super admin' : row.actor === 'customer' ? 'Customer' : row.actor === 'visitor' ? 'Visitor' : 'System';
+  const title = `${who} · ${titles[row.action] || titleCase(row.action)}`;
+  const detail = [row.action === 'page.viewed' ? pageName(row.target) : row.target, row.detail].filter(Boolean).join(' · ');
+  return { title, detail };
 }

@@ -3,6 +3,7 @@ import {
   adminCookieHeader,
   clearAdminCookieHeader,
   clientIp,
+  deviceFrom,
   isAdminRequest,
   isPasswordSetViaEnv,
   issueAdminSession,
@@ -29,10 +30,10 @@ export async function POST(req: Request) {
   const ok = password.length > 0 && (await verifyPassword(password));
   recordLoginAttempt(ip, ok);
   if (!ok) {
-    await recordAudit({ actor: 'workshop', action: 'login.failed', ip, detail: 'Wrong workshop password' });
+    await recordAudit({ actor: 'workshop', action: 'login.failed', ip, detail: `Wrong password · ${deviceFrom(req)}` });
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }
-  await recordAudit({ actor: 'workshop', action: 'login', ip });
+  await recordAudit({ actor: 'workshop', action: 'login', ip, detail: deviceFrom(req) });
   const token = await issueAdminSession();
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', adminCookieHeader(token));
@@ -65,7 +66,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (await isAdminRequest(req)) await recordAudit({ actor: 'workshop', action: 'logout', ip: clientIp(req) });
+  if (await isAdminRequest(req)) await recordAudit({ actor: 'workshop', action: 'logout', ip: clientIp(req), detail: deviceFrom(req) });
   await revokeAdminSession(req);
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', clearAdminCookieHeader());

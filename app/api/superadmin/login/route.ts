@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { clientIp } from '@/lib/admin-auth';
+import { clientIp, deviceFrom } from '@/lib/admin-auth';
 import { recordAudit } from '@/lib/audit';
 import {
   changeSuperadminPassword,
@@ -29,11 +29,11 @@ export async function POST(req: Request) {
   const ok = password.length > 0 && (await verifySuperadminPassword(password));
   recordSuperadminLogin(ip, ok);
   if (!ok) {
-    await recordAudit({ actor: 'superadmin', action: 'login.failed', ip, detail: 'Wrong super admin password' });
+    await recordAudit({ actor: 'superadmin', action: 'login.failed', ip, detail: `Wrong password · ${deviceFrom(req)}` });
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }
   const token = await issueSuperadminSession();
-  await recordAudit({ actor: 'superadmin', action: 'login', ip });
+  await recordAudit({ actor: 'superadmin', action: 'login', ip, detail: deviceFrom(req) });
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', superadminCookieHeader(token));
   return res;
@@ -53,7 +53,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (await isSuperadminRequest(req)) {
-    await recordAudit({ actor: 'superadmin', action: 'logout', ip: clientIp(req) });
+    await recordAudit({ actor: 'superadmin', action: 'logout', ip: clientIp(req), detail: deviceFrom(req) });
   }
   await revokeSuperadminSession(req);
   const res = NextResponse.json({ ok: true });

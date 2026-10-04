@@ -64,7 +64,7 @@ export type SuperadminReport = {
   accounts: { id: string; name: string; phone: string; createdAt: string }[];
   contacts: { id: string; name: string; phone: string; area: string; updatedAt: string }[];
   topPages: { path: string; views: number }[];
-  visits: { at: string; path: string; referrer: string; visitor: string }[];
+  visits: { at: string; path: string; referrer: string; visitor: string; ip: string }[];
   audit: AuditRow[];
 };
 
@@ -115,7 +115,7 @@ export async function buildSuperadminReport(): Promise<SuperadminReport> {
 
   const active = db.products.filter(p => p.active);
   const [audit, auditTotal, workshopFromEnv] = await Promise.all([
-    listAudit({ limit: 8 }),
+    listAudit({ limit: 8, kind: 'notable' }),
     auditCount(),
     isPasswordSetViaEnv(),
   ]);
@@ -180,11 +180,12 @@ export async function buildSuperadminReport(): Promise<SuperadminReport> {
     accounts: db.customers.map(c => ({ id: c.id, name: c.name, phone: c.phone, createdAt: c.createdAt })),
     contacts: db.contacts.map(c => ({ id: c.id, name: c.name, phone: c.phone, area: c.area, updatedAt: c.updatedAt })),
     topPages: [...pages.entries()].map(([pathName, views]) => ({ path: pathName, views })).sort((a, b) => b.views - a.views).slice(0, 8),
-    visits: [...db.visits].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 40).map(v => ({
+    visits: [...db.visits].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 400).map(v => ({
       at: v.createdAt,
       path: v.path,
       referrer: v.referrer || '',
       visitor: v.visitorId.slice(0, 8),
+      ip: v.ip || '',
     })),
     audit,
   };

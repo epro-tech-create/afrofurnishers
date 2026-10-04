@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     limit: Number(url.searchParams.get('limit') || 50),
     before: url.searchParams.get('before') || '',
     q: url.searchParams.get('q') || '',
+    kind: url.searchParams.get('kind') || 'all',
   });
   return NextResponse.json({ rows });
 }
