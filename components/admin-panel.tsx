@@ -323,6 +323,11 @@ function Orders({ initialFilter, refreshKey, bump }: { initialFilter: string; re
           o={orders.find(o => o.id === open)!}
           onClose={() => setOpen(null)}
           patch={patch}
+          onDelete={async order => {
+            await api(`/orders/${order.id}`, { method: 'DELETE' });
+            await load();
+            bump();
+          }}
         />
       )}
     </Card>
@@ -356,11 +361,21 @@ function OrderRow({ o, onOpen }: { o: Order; onOpen: () => void }) {
   );
 }
 
-function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; patch: (o: Order, b: object) => Promise<void> }) {
+function OrderDialog({ o, onClose, patch, onDelete }: { o: Order; onClose: () => void; patch: (o: Order, b: object) => Promise<void>; onDelete: (o: Order) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   async function run(b: object) {
     setBusy(true);
     try { await patch(o, b); } finally { setBusy(false); }
+  }
+  async function remove() {
+    setBusy(true);
+    try {
+      await onDelete(o);
+      onClose();
+    } finally {
+      setBusy(false);
+    }
   }
   const at = FLOW.indexOf(o.status);
   const next = at >= 0 && at < FLOW.length - 1 ? FLOW[at + 1] : null;
@@ -437,6 +452,15 @@ function OrderDialog({ o, onClose, patch }: { o: Order; onClose: () => void; pat
               {o.status !== 'cancelled' && (
                 <button type="button" className="link danger" disabled={busy} onClick={() => { if (confirm('Cancel this order and return the pieces to inventory?')) run({ status: 'cancelled' }); }}>Cancel order</button>
               )}
+              {confirmDelete ? (
+                <div className="delete-confirm">
+                  <p>Delete {o.id}? It leaves sales and reports. Pieces still on this order go back to inventory.</p>
+                  <button type="button" className="btn-primary sm" disabled={busy} onClick={remove}>{busy ? 'Deleting…' : 'Delete this order'}</button>
+                  <button type="button" className="btn-ghost sm" disabled={busy} onClick={() => setConfirmDelete(false)}>Keep it</button>
+                </div>
+              ) : (
+                <button type="button" className="link danger" disabled={busy} onClick={() => setConfirmDelete(true)}>Delete order</button>
+              )}
             </div>
           </section>
         </div>
@@ -504,7 +528,7 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
     setBusy(true);
     setError('');
     try {
-      const body = { ...draft, name, price };
+      const body = { ...draft, name, price, oldPrice: null };
       if (id) {
         const data = await api<{ product: ProductFull }>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
         setItems(items.map(p => (p.id === id ? data.product : p)));
@@ -553,7 +577,6 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
           {['Living Room', 'Dining Room', 'Bedroom', 'Office', 'Outdoor'].map(c => <option key={c}>{c}</option>)}
         </select></label>
         <label>Price (TZS)<input type="number" min={0} value={d.price ?? 0} onChange={e => setD({ ...d, price: Number(e.target.value) })} required /></label>
-        <label>Old price<input type="number" min={0} value={d.oldPrice ?? ''} onChange={e => setD({ ...d, oldPrice: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>
         <label>Inventory<input type="number" min={0} value={d.stock ?? 0} onChange={e => setD({ ...d, stock: Number(e.target.value) })} required /></label>
         <div className="full photo-pick">
           <span>Photo</span>
@@ -579,8 +602,6 @@ function Products({ refreshKey, bump }: { refreshKey: number; bump: () => void }
             <p className="muted">{String(d.image || '').startsWith('data:') ? 'Photo added. This is what customers see.' : 'Add a JPG or PNG. This is what customers see on the shop.'}</p>
           </div>
         </div>
-        <label>Material<input value={d.material || ''} onChange={e => setD({ ...d, material: e.target.value })} /></label>
-        <label>Colour<input value={d.color || ''} onChange={e => setD({ ...d, color: e.target.value })} /></label>
         <label className="full">Description<textarea value={d.description || ''} onChange={e => setD({ ...d, description: e.target.value })} /></label>
         <label className="check"><input type="checkbox" checked={!!d.featured} onChange={e => setD({ ...d, featured: e.target.checked })} /> Featured on homepage</label>
         <label className="check"><input type="checkbox" checked={d.active !== false} onChange={e => setD({ ...d, active: e.target.checked })} /> Visible in shop</label>
@@ -819,35 +840,81 @@ function Customers() {
   );
 }
 
+function visitPageName(path: string) {
+  if (path === '/') return 'Home';
+  const names: Record<string, string> = { '/shop': 'Shop', '/account': 'Account', '/checkout': 'Checkout', '/orders': 'My orders', '/cart': 'Bag' };
+  return names[path] || path;
+}
+
+function visitSource(referrer: string) {
+  if (!referrer) return 'Direct';
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, '');
+    if (host.endsWith('afrofurnishers.com')) return 'This site';
+    if (host.includes('google')) return 'Google';
+    return host;
+  } catch {
+    return 'Direct';
+  }
+}
+
 function Visitors({ stats }: { stats: DashboardStats }) {
   const v = stats.visitors;
   const max = Math.max(1, ...v.byDay.map(d => d.views));
+  const recent = v.recent || [];
   return (
-    <div className="grid">
+    <div className="grid visitors-live">
+      <div className="visitors-head">
+        <span className="live-dot" aria-hidden="true" />
+        <strong>Live</strong>
+        <span className="muted">Updates while this page is open</span>
+      </div>
       <div className="stat-grid cols-3">
-        <div className="stat tone-forest"><span className="stat-icon"><Eye size={19} /></span><div><small>Total views</small><strong>{v.total}</strong><span className="muted">all time</span></div></div>
-        <div className="stat tone-orange"><span className="stat-icon"><TrendingUp size={19} /></span><div><small>Today</small><strong>{v.today}</strong><span className="muted">page views</span></div></div>
-        <div className="stat tone-plum"><span className="stat-icon"><Users size={19} /></span><div><small>Unique · 7 days</small><strong>{v.unique7d}</strong><span className="muted">visitors</span></div></div>
+        <div className="stat tone-forest rise"><span className="stat-icon"><Eye size={19} /></span><div><small>Total views</small><strong>{v.total}</strong><span className="muted">all time</span></div></div>
+        <div className="stat tone-orange rise"><span className="stat-icon"><TrendingUp size={19} /></span><div><small>Today</small><strong>{v.today}</strong><span className="muted">page views</span></div></div>
+        <div className="stat tone-plum rise"><span className="stat-icon"><Users size={19} /></span><div><small>Unique · 7 days</small><strong>{v.unique7d}</strong><span className="muted">people</span></div></div>
       </div>
       <div className="cols-2">
         <Card title="Daily views">
           <div className="bars">
-            {v.byDay.map(d => (
-              <div key={d.date} className="bar-col" title={`${d.date}: ${d.views} views, ${d.unique} unique`}>
-                <div className="bar" style={{ height: `${Math.max(4, Math.round((d.views / max) * 130))}px` }} />
+            {v.byDay.map((d, i) => (
+              <div key={d.date} className="bar-col" title={`${d.date}: ${d.views} views, ${d.unique} people`} style={{ animationDelay: `${i * 40}ms` }}>
+                <div className="bar grow" style={{ height: `${Math.max(4, Math.round((d.views / max) * 130))}px` }} />
                 <small>{d.date}</small>
               </div>
             ))}
           </div>
         </Card>
-        <Card title="Most visited pages">
-          {v.topPages.length === 0 && <p className="muted">No visits recorded yet — browse the shop and check back.</p>}
-          {v.topPages.map(p => (
-            <p key={p.path} className="row"><span className="mono">{p.path}</span><strong>{p.views}</strong></p>
-          ))}
-          <p className="muted">Tracking is privacy-light: anonymous per-browser IDs, no cookies for ads, data stays on your server.</p>
+        <Card title="Latest visits">
+          {recent.length === 0 && <p className="muted">No visits yet. Open the shop in another tab and they appear here.</p>}
+          <div className="visit-feed">
+            {recent.map((visit, i) => {
+              const time = new Date(visit.at).toLocaleTimeString('en-GB', { timeZone: 'Africa/Dar_es_Salaam', hour: '2-digit', minute: '2-digit', hour12: false });
+              return (
+                <article key={`${visit.at}-${visit.path}-${i}`} className="visit-row rise" style={{ animationDelay: `${i * 45}ms` }}>
+                  <b>{time}</b>
+                  <div>
+                    <strong>{visitPageName(visit.path)}</strong>
+                    <span className="muted">{visitSource(visit.referrer)}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </Card>
       </div>
+      <Card title="Most visited pages">
+        {v.topPages.length === 0 && <p className="muted">No pages yet.</p>}
+        <div className="page-ranks">
+          {v.topPages.map(p => (
+            <div key={p.path} className="page-rank">
+              <span>{visitPageName(p.path)}</span>
+              <strong>{p.views}</strong>
+              <i style={{ width: `${Math.max(8, (p.views / Math.max(1, v.topPages[0]?.views || 1)) * 100)}%` }} />
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -1152,6 +1219,10 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
           await api(`/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify(body) });
           await loadOrders();
           bump();
+        }} onDelete={async order => {
+          await api(`/orders/${order.id}`, { method: 'DELETE' });
+          await loadOrders();
+          bump();
         }} />
       )}
       {open && (
@@ -1326,9 +1397,11 @@ export function AdminApp() {
   useEffect(() => {
     if (!authed) return;
     let live = true;
-    api<DashboardStats>('/stats').then(s => { if (live) setStats(s); }).catch(() => {});
-    return () => { live = false; };
-  }, [authed, refreshKey]);
+    const pull = () => api<DashboardStats>('/stats').then(s => { if (live) setStats(s); }).catch(() => {});
+    pull();
+    const timer = tab === 'visitors' ? setInterval(pull, 12000) : 0;
+    return () => { live = false; if (timer) clearInterval(timer); };
+  }, [authed, refreshKey, tab]);
 
   async function logout() {
     try {

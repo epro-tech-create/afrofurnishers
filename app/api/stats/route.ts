@@ -35,6 +35,10 @@ function visitorsStats(db: Awaited<ReturnType<typeof readDB>>): VisitorsStats {
       .map(([path, views]) => ({ path, views }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 6),
+    recent: [...db.visits]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 12)
+      .map(v => ({ path: v.path, at: v.createdAt, referrer: v.referrer || '' })),
   };
 }
 

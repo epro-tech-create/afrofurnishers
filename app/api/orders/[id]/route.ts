@@ -56,3 +56,27 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   });
   return NextResponse.json({ order });
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdminRequest(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const db = await readDB();
+  const i = db.orders.findIndex(o => o.id.toLowerCase() === id.toLowerCase());
+  if (i < 0) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  const [order] = db.orders.splice(i, 1);
+  if (order.status !== 'cancelled') {
+    for (const item of order.items) {
+      const product = db.products.find(p => p.id === item.productId);
+      if (product) product.stock += item.qty;
+    }
+  }
+  await writeDB(db);
+  await recordAudit({
+    actor: 'workshop',
+    action: 'order.deleted',
+    target: order.id,
+    detail: `${order.customer.name} · TZS ${order.total}`,
+    ip: clientIp(req),
+  });
+  return NextResponse.json({ ok: true });
+}

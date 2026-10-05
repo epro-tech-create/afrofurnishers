@@ -120,14 +120,13 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
   }
   function header() {
     fill(0, PAGE_H - 64, PAGE_W, 64, ORANGE);
-    text('AFROFURNISHERS', LEFT, PAGE_H - 30, 16, true, WHITE);
-    text('Dar es Salaam  ·  Made for the home', LEFT, PAGE_H - 48, 9, false, WHITE);
+    text('AFROFURNISHERS', LEFT, PAGE_H - 38, 16, true, WHITE);
     right(titles[kind].toUpperCase(), RIGHT, PAGE_H - 28, 12, true, WHITE);
     right(stamp, RIGHT, PAGE_H - 46, 9, false, WHITE);
   }
   function footer(index: number, total: number) {
     fill(LEFT, 28, RIGHT - LEFT, 1, LINE);
-    page.push({ t: 'text', text: 'AfroFurnishers  ·  +255 692 009 222  ·  Workshop copy', x: LEFT, y: 14, size: 8, bold: false, c: SOFT });
+    page.push({ t: 'text', text: 'AfroFurnishers  |  +255 692 009 222  |  Workshop copy', x: LEFT, y: 14, size: 8, bold: false, c: SOFT });
     const label = `Page ${index} of ${total}`;
     page.push({ t: 'text', text: label, x: RIGHT - width(label, 8, false), y: 14, size: 8, bold: false, c: SOFT });
   }
@@ -226,7 +225,7 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
     } else {
       need(26, () => {});
       fill(LEFT, top - 24, RIGHT - LEFT, 24, BLACK);
-      text('TOTAL  ·  cancelled sales left out', LEFT + 8, top - 16, 9, true, WHITE);
+      text('TOTAL  -  cancelled sales left out', LEFT + 8, top - 16, 9, true, WHITE);
       right(tzs(revenue), 640, top - 16, 9, true, WHITE);
       top -= 24;
     }
@@ -268,7 +267,7 @@ export function downloadShopReport(orders: Order[], products: ProductFull[], kin
     } else {
       need(26, () => {});
       fill(LEFT, top - 24, RIGHT - LEFT, 24, BLACK);
-      text(`${units} units on hand${low ? `  ·  ${low} at 5 or below` : ''}`, LEFT + 8, top - 16, 9, true, WHITE);
+      text(`${units} units on hand${low ? `  -  ${low} at 5 or below` : ''}`, LEFT + 8, top - 16, 9, true, WHITE);
       right(tzs(stockValue), 750, top - 16, 9, true, WHITE);
       top -= 24;
     }

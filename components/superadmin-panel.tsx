@@ -524,6 +524,7 @@ function describeAudit(row: AuditRow): { title: string; detail: string } {
     'profile.updated': 'Updated profile',
     'order.created': 'Placed an order',
     'order.updated': 'Updated an order',
+    'order.deleted': 'Deleted an order',
     'product.created': 'Added a product',
     'product.updated': 'Edited a product',
     'product.deleted': 'Removed a product',

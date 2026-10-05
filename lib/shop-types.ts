@@ -132,6 +132,7 @@ export interface VisitorsStats {
   unique7d: number;
   byDay: { date: string; views: number; unique: number }[];
   topPages: { path: string; views: number }[];
+  recent: { path: string; at: string; referrer: string }[];
 }
 
 export const ORDER_STATUSES: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'];

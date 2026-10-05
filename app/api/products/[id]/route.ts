@@ -34,6 +34,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   for (const k of allowed) {
     if (k in body) (updated as Record<string, unknown>)[k] = body[k];
   }
+  if (updated.oldPrice == null || Number(updated.oldPrice) <= 0) delete updated.oldPrice;
   if (typeof updated.price === 'number') updated.price = Math.max(0, Math.min(1e12, Math.round(updated.price)));
   if (typeof updated.stock === 'number') updated.stock = Math.max(0, Math.min(100000, Math.floor(updated.stock)));
   updated.name = String(updated.name || '').slice(0, 120);
