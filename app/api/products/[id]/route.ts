@@ -4,12 +4,14 @@ import { NextResponse } from 'next/server';
 import { readDB, writeDB } from '@/lib/db';
 import { clientIp, isAdminRequest } from '@/lib/admin-auth';
 import { recordAudit } from '@/lib/audit';
+import { deleteProductPhotoBytes } from '@/lib/neon-store';
 import { saveProductPhoto } from '@/lib/save-product-photo';
 
 async function removeUploadedPhoto(image: string) {
-  const match = image.match(/^\/uploads\/products\/([a-z0-9-]+\.jpg)/);
-  if (!match) return;
-  await unlink(path.join(process.cwd(), 'public', 'uploads', 'products', match[1])).catch(() => {});
+  const file = image.match(/^\/uploads\/products\/([a-z0-9-]+\.jpg)/);
+  if (file) await unlink(path.join(process.cwd(), 'public', 'uploads', 'products', file[1])).catch(() => {});
+  const stored = image.match(/^\/api\/photos\/([a-z0-9-]+)/);
+  if (stored && process.env.DATABASE_URL) await deleteProductPhotoBytes(stored[1]).catch(() => {});
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {

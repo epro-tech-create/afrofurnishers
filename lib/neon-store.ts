@@ -114,6 +114,12 @@ create index if not exists orders_status_idx on orders (status);
 create index if not exists order_items_order_id_idx on order_items (order_id);
 alter table visits add column if not exists ip text not null default '';
 create index if not exists visits_created_at_idx on visits (created_at desc);
+create table if not exists product_photos (
+  id text primary key,
+  mime text not null,
+  bytes bytea not null,
+  updated_at timestamptz not null default now()
+);
 `;
 
 type Snap = {
@@ -516,4 +522,27 @@ export async function queryAudit(limit: number, before: string, q: string, kind:
 export async function countAudit(): Promise<number> {
   const result = await pool().query('select count(*)::int as n from audit_logs');
   return num(result.rows[0]?.n);
+}
+
+export async function saveProductPhotoBytes(id: string, bytes: Buffer, mime: string): Promise<void> {
+  await ensureShopSchema();
+  await pool().query(
+    `insert into product_photos (id, mime, bytes, updated_at) values ($1, $2, $3, now())
+     on conflict (id) do update set mime = excluded.mime, bytes = excluded.bytes, updated_at = now()`,
+    [id, mime, bytes],
+  );
+}
+
+export async function loadProductPhoto(id: string): Promise<{ mime: string; bytes: Buffer } | null> {
+  await ensureShopSchema();
+  const result = await pool().query('select mime, bytes from product_photos where id = $1', [id]);
+  const row = result.rows[0];
+  if (!row?.bytes) return null;
+  const bytes = Buffer.isBuffer(row.bytes) ? row.bytes : Buffer.from(row.bytes);
+  return { mime: String(row.mime || 'image/jpeg'), bytes };
+}
+
+export async function deleteProductPhotoBytes(id: string): Promise<void> {
+  await ensureShopSchema();
+  await pool().query('delete from product_photos where id = $1', [id]);
 }
