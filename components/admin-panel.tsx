@@ -252,6 +252,9 @@ function Orders({ initialFilter, refreshKey, bump }: { initialFilter: string; re
   const [filter, setFilter] = useState(initialFilter);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => setFilter(initialFilter), [initialFilter]);
@@ -283,6 +286,23 @@ function Orders({ initialFilter, refreshKey, bump }: { initialFilter: string; re
     bump();
   }
 
+  async function remove(order: Order) {
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await api(`/orders/${order.id}`, { method: 'DELETE' });
+      setPendingDelete(null);
+      if (open === order.id) setOpen(null);
+      await load();
+      bump();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Could not delete that order');
+      throw e;
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function csv() {
     const rows = [['id', 'date', 'customer', 'phone', 'area', 'items', 'total', 'payment', 'pay_status', 'status']];
     for (const o of list) {
@@ -312,7 +332,7 @@ function Orders({ initialFilter, refreshKey, bump }: { initialFilter: string; re
         <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Pay</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {visible.map(o => (
-            <OrderRow key={o.id} o={o} onOpen={() => setOpen(o.id)} />
+            <OrderRow key={o.id} o={o} onOpen={() => setOpen(o.id)} onDelete={() => { setDeleteError(''); setPendingDelete(o); }} />
           ))}
         </tbody>
       </table></div>
@@ -323,11 +343,16 @@ function Orders({ initialFilter, refreshKey, bump }: { initialFilter: string; re
           o={orders.find(o => o.id === open)!}
           onClose={() => setOpen(null)}
           patch={patch}
-          onDelete={async order => {
-            await api(`/orders/${order.id}`, { method: 'DELETE' });
-            await load();
-            bump();
-          }}
+          onDelete={remove}
+        />
+      )}
+      {pendingDelete && (
+        <DeleteOrderPrompt
+          order={pendingDelete}
+          busy={deleting}
+          error={deleteError}
+          onCancel={() => { if (!deleting) setPendingDelete(null); }}
+          onConfirm={async () => { try { await remove(pendingDelete); } catch { /* shown in the prompt */ } }}
         />
       )}
     </Card>
@@ -347,7 +372,7 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
 
 const PAGE_SIZE = 15;
 
-function OrderRow({ o, onOpen }: { o: Order; onOpen: () => void }) {
+function OrderRow({ o, onOpen, onDelete }: { o: Order; onOpen: () => void; onDelete: () => void }) {
   return (
     <tr>
       <td className="lead" data-label="Order"><strong>{o.id}</strong><br /><small className="muted">{timeAgo(o.createdAt)}</small></td>
@@ -356,23 +381,47 @@ function OrderRow({ o, onOpen }: { o: Order; onOpen: () => void }) {
       <td data-label="Total"><strong>{money(o.total)}</strong><br /><small className="muted">{o.payment === 'shop' ? 'At the shop' : 'On delivery'}</small></td>
       <td data-label="Pay"><span className={`pill pay-${shownPay(o.paymentStatus)}`}>{PAY_LABEL[shownPay(o.paymentStatus)]}</span></td>
       <td data-label="Status"><span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
-      <td className="actions"><button className="link" onClick={onOpen}>Manage</button></td>
+      <td className="actions">
+        <span className="row-icons">
+          <button className="link" onClick={onOpen}>Manage</button>
+          <button type="button" className="icon-btn danger" aria-label={`Delete order ${o.id}`} onClick={onDelete}><Trash2 size={14} /></button>
+        </span>
+      </td>
     </tr>
+  );
+}
+
+function DeleteOrderPrompt({ order, busy, error, onCancel, onConfirm }: {
+  order: Order; busy: boolean; error: string; onCancel: () => void; onConfirm: () => void;
+}) {
+  return (
+    <Modal title="Delete order" onClose={onCancel}>
+      <p>Delete {order.id}? It leaves sales and reports. Pieces still on this order go back to inventory.</p>
+      {error && <p className="error">{error}</p>}
+      <div className="profile-actions">
+        <button type="button" className="btn-primary sm" disabled={busy} onClick={onConfirm}>{busy ? 'Deleting…' : 'Delete'}</button>
+        <button type="button" className="btn-ghost sm" disabled={busy} onClick={onCancel}>Keep</button>
+      </div>
+    </Modal>
   );
 }
 
 function OrderDialog({ o, onClose, patch, onDelete }: { o: Order; onClose: () => void; patch: (o: Order, b: object) => Promise<void>; onDelete: (o: Order) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteErr, setDeleteErr] = useState('');
   async function run(b: object) {
     setBusy(true);
     try { await patch(o, b); } finally { setBusy(false); }
   }
   async function remove() {
     setBusy(true);
+    setDeleteErr('');
     try {
       await onDelete(o);
       onClose();
+    } catch (e) {
+      setDeleteErr(e instanceof Error ? e.message : 'Could not delete that order');
     } finally {
       setBusy(false);
     }
@@ -455,6 +504,7 @@ function OrderDialog({ o, onClose, patch, onDelete }: { o: Order; onClose: () =>
               {confirmDelete ? (
                 <div className="delete-confirm">
                   <p>Delete {o.id}? It leaves sales and reports. Pieces still on this order go back to inventory.</p>
+                  {deleteErr && <p className="error">{deleteErr}</p>}
                   <button type="button" className="btn-primary sm" disabled={busy} onClick={remove}>{busy ? 'Deleting…' : 'Delete this order'}</button>
                   <button type="button" className="btn-ghost sm" disabled={busy} onClick={() => setConfirmDelete(false)}>Keep it</button>
                 </div>
@@ -1081,6 +1131,9 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
   const [orders, setOrders] = useState<Order[]>([]);
   const [q, setQ] = useState('');
   const [manageId, setManageId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [products, setProducts] = useState<ProductFull[]>([]);
   const [catalog, setCatalog] = useState<ProductFull[]>([]);
   const [lines, setLines] = useState<{ productId: string; qty: number }[]>([{ productId: '', qty: 1 }]);
@@ -1205,7 +1258,12 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
                 <td className="nowrap" data-label="Total"><strong>{money(o.total)}</strong></td>
                 <td data-label="Pay"><span className={`pill pay-${shownPay(o.paymentStatus)}`}>{PAY_LABEL[shownPay(o.paymentStatus)]}</span></td>
                 <td data-label="Status"><span className={`pill st-${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
-                <td className="actions"><button className="link" onClick={() => setManageId(o.id)}>Open</button></td>
+                <td className="actions">
+                  <span className="row-icons">
+                    <button className="link" onClick={() => setManageId(o.id)}>Open</button>
+                    <button type="button" className="icon-btn danger" aria-label={`Delete sale ${o.id}`} onClick={() => { setDeleteError(''); setPendingDelete(o); }}><Trash2 size={14} /></button>
+                  </span>
+                </td>
               </tr>
               );
             })}
@@ -1221,9 +1279,33 @@ function NewSale({ bump, refreshKey, notice, onCreated }: { bump: () => void; re
           bump();
         }} onDelete={async order => {
           await api(`/orders/${order.id}`, { method: 'DELETE' });
+          if (pendingDelete?.id === order.id) setPendingDelete(null);
           await loadOrders();
           bump();
         }} />
+      )}
+      {pendingDelete && (
+        <DeleteOrderPrompt
+          order={pendingDelete}
+          busy={deleting}
+          error={deleteError}
+          onCancel={() => { if (!deleting) setPendingDelete(null); }}
+          onConfirm={async () => {
+            setDeleting(true);
+            setDeleteError('');
+            try {
+              await api(`/orders/${pendingDelete.id}`, { method: 'DELETE' });
+              if (manageId === pendingDelete.id) setManageId(null);
+              setPendingDelete(null);
+              await loadOrders();
+              bump();
+            } catch (e) {
+              setDeleteError(e instanceof Error ? e.message : 'Could not delete that sale');
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        />
       )}
       {open && (
         <Modal title="New sale" wide onClose={() => setOpen(false)}>

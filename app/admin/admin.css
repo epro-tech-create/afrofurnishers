@@ -139,31 +139,20 @@
 @keyframes live-pulse { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) {
   .admin-app .rise, .admin-app .bar.grow, .admin-app .live-dot { animation: none; }
-  .admin-app .card:hover,
-  .admin-app .stat:hover,
   .admin-app .inv-card:hover,
-  .admin-app .report-card:hover,
-  .admin-app .order-card:hover,
-  .admin-app .pipe:hover,
   .admin-app .btn-primary:hover,
   .admin-app .btn-ghost:hover,
   .admin-app .icon-btn:hover,
   .admin-app .side nav button:hover,
   .admin-app .inv-card:hover > img,
-  .admin-app .bar-col:hover .bar,
-  .admin-app .pill:hover { transform: none; }
+  .admin-app .bar-col:hover .bar { transform: none; }
 }
 
 .admin-app .btn-primary,
 .admin-app .btn-ghost,
 .admin-app .icon-btn,
 .admin-app .side nav button,
-.admin-app .card,
-.admin-app .stat,
 .admin-app .inv-card,
-.admin-app .report-card,
-.admin-app .order-card,
-.admin-app .pill,
 .admin-app .visit-row,
 .admin-app .page-rank i,
 .admin-app .bar,
@@ -178,14 +167,6 @@
 .admin-app .icon-btn:hover { transform: translateY(-2px); border-color: var(--orange); color: var(--orange); }
 .admin-app .side nav button:hover { transform: translateX(4px); }
 .admin-app .side nav button.active:hover { transform: none; }
-.admin-app .card:hover,
-.admin-app .stat:hover,
-.admin-app .report-card:hover,
-.admin-app .order-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 28px #11111114;
-  border-color: #f0c2b6;
-}
 .admin-app .inv-card:hover { transform: translateY(-4px); box-shadow: 0 18px 34px #1111111a; }
 .admin-app .inv-card:hover > img { transform: scale(1.05); }
 .admin-app tbody tr td { transition: background 0.18s ease; }
@@ -193,7 +174,6 @@
 .admin-app .visit-row:hover { background: #fff7f4; padding-left: 8px; border-radius: 10px; }
 .admin-app .bar-col:hover .bar { filter: brightness(1.08); transform: translateY(-4px); }
 .admin-app .page-rank:hover i { filter: brightness(1.08); transform: scaleY(1.4); }
-.admin-app .pill:hover { transform: translateY(-1px); }
 .admin-app input:hover,
 .admin-app select:hover,
 .admin-app textarea:hover { border-color: #111; }
@@ -204,8 +184,7 @@
 
 
 .admin-app .pipeline{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.admin-app .pipe{ border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 12px 8px; display: grid; gap: 2px; text-align: center; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
-.admin-app .pipe:hover{ border-color: var(--orange); transform: translateY(-3px); box-shadow: 0 10px 22px #11111112; }
+.admin-app .pipe{ border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 12px 8px; display: grid; gap: 2px; text-align: center; }
 .admin-app .pipe strong{ font-size: 22px; }
 .admin-app .pipe span{ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); }
 
@@ -217,7 +196,8 @@
 .admin-app .table-wrap > table{ width: 100%; border-collapse: collapse; font-size: 14px; }
 .admin-app .table-wrap > table.orders-table{ table-layout: fixed; }
 .admin-app .table-wrap > table.orders-table th:nth-child(1){ width: 15%; }
-.admin-app .table-wrap > table.orders-table th:nth-child(2){ width: 24%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(2){ width: 20%; }
+.admin-app .table-wrap > table.orders-table th:nth-child(7){ width: 12%; }
 .admin-app .table-wrap > table.orders-table th:nth-child(3){ width: 8%; }
 .admin-app .table-wrap > table.orders-table th:nth-child(4){ width: 16%; }
 .admin-app .table-wrap > table.orders-table th:nth-child(5){ width: 15%; }
@@ -415,20 +395,22 @@
 .admin-app .piece-table td.nowrap, .admin-app .piece-table th:nth-child(4){ white-space: nowrap; width: 1%; }
 .admin-app .piece-table tr.over td{ background: #f6f6f6; }
 .admin-app .receipt-lines{ max-height: 280px; overflow: auto; display: grid; gap: 8px; align-content: start; }
-.admin-app .row-icons{ display: flex; gap: 6px; justify-content: flex-end; }
+.admin-app .row-icons{ display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+.admin-app td.actions .icon-btn{ width: 34px; height: 34px; }
 .admin-app a.icon-btn{ text-decoration: none; color: var(--orange); }
 .admin-app td.nowrap{ white-space: nowrap; }
 .admin-app .settings-page{ display: grid; gap: 18px; }
 .admin-app .profile-hero{
   display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 22px; align-items: center;
-  background: #111; border-radius: 20px; padding: 22px;
+  background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 22px;
 }
 .admin-app .profile-hero h2,
 .admin-app .profile-hero p,
 .admin-app .profile-hero label,
-.admin-app .profile-hero .manage-kicker{ color: #fff; }
+.admin-app .profile-hero .manage-kicker{ color: #111; }
 .admin-app .profile-hero h2{ margin: 4px 0 14px; font-size: 28px; }
-.admin-app .profile-hero .error{ color: #111; background: #fff; border-radius: 10px; padding: 8px 12px; }
+.admin-app .profile-hero input{ background: #f6f6f6; }
+.admin-app .profile-hero .manage-kicker{ color: #444; }
 .admin-app .profile-fields{ display: grid; gap: 12px; }
 .admin-app .profile-actions{ display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .admin-app .avatar-pick{ display: grid; justify-items: center; gap: 8px; cursor: pointer; }
@@ -436,7 +418,7 @@
 .admin-app .avatar-pick img,
 .admin-app .avatar-pick .ph{
   width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-  border: 4px solid var(--orange); background: #fff; color: #111;
+  border: 4px solid var(--orange); background: #f4f4f4; color: #111;
   display: grid; place-items: center; font-size: 32px; font-weight: 800;
 }
 .admin-app .avatar-pick em{ color: var(--orange); font-style: normal; font-weight: 800; font-size: 13px; }
@@ -519,11 +501,11 @@
 .admin-app .sales-table td{ vertical-align: top; }
 .admin-app .sales-table th:nth-child(1), .admin-app .sales-table td:nth-child(1){ width: 16%; }
 .admin-app .sales-table th:nth-child(2), .admin-app .sales-table td:nth-child(2){ width: 13%; }
-.admin-app .sales-table th:nth-child(3), .admin-app .sales-table td:nth-child(3){ width: 26%; }
+.admin-app .sales-table th:nth-child(3), .admin-app .sales-table td:nth-child(3){ width: 22%; }
 .admin-app .sales-table th:nth-child(4), .admin-app .sales-table td:nth-child(4){ width: 13%; }
 .admin-app .sales-table th:nth-child(5), .admin-app .sales-table td:nth-child(5){ width: 9%; }
 .admin-app .sales-table th:nth-child(6), .admin-app .sales-table td:nth-child(6){ width: 15%; }
-.admin-app .sales-table th:nth-child(7), .admin-app .sales-table td:nth-child(7){ width: 8%; }
+.admin-app .sales-table th:nth-child(7), .admin-app .sales-table td:nth-child(7){ width: 12%; }
 .admin-app .sales-table .nowrap{ white-space: nowrap; }
 .admin-app .piece-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .admin-app .piece-list li{ font-size: 13px; line-height: 1.35; overflow-wrap: break-word; }
